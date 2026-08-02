@@ -25,6 +25,13 @@
             <button id="btnBold" title="加粗 (Ctrl+B)"><b>B</b></button>
             <button id="btnItalic" title="斜体 (Ctrl+I)"><i>I</i></button>
             <button id="btnCenter" title="居中">⊙</button>
+            <select id="fontSelect" title="选择字体">
+                <option value="">默认字体</option>
+                <option value="SimSun">宋体</option>
+                <option value="SimHei">黑体</option>
+                <option value="Noto Serif SC">思源宋体</option>
+                <option value="Noto Sans SC">思源黑体</option>
+            </select>
 
             <div class="separator"></div>
 
@@ -40,6 +47,8 @@
             <div class="separator"></div>
 
             <button id="btnTemplate" class="primary" title="加载数模国赛模板">📋 加载模板</button>
+            <button id="btnStart" class="primary" title="清空编辑器开始新文档">🆕 开始</button>
+            <button id="btnReload" title="删除草稿并重新加载">🔄 重新加载</button>
 
             <div class="separator"></div>
 
@@ -57,7 +66,8 @@
                     <p>这是一个面向数学建模参赛者的可视化 LaTeX 编辑器。您可以像使用 Word 一样编辑文档，系统会实时生成 LaTeX 代码。</p>
 
                     <h2>快速开始</h2>
-                    <p>点击工具栏的按钮来格式化文本，或直接在此区域输入内容。</p>
+                    <p><strong>无需选择模板，直接开始编辑！</strong>点击工具栏的按钮来格式化文本，或直接在此区域输入内容。</p>
+                    <p>如需使用数模国赛论文框架，可点击工具栏的"加载模板"按钮（可选）。</p>
 
                     <h3>功能特点</h3>
                     <ul>
@@ -66,7 +76,6 @@
                         <li>有序列表和无序列表</li>
                         <li>行内公式和行间公式</li>
                         <li>图片插入</li>
-                        <li>内置数模国赛模板</li>
                         <li>本地草稿自动保存</li>
                     </ul>
 
@@ -76,7 +85,7 @@
                     <div class="formula-block" data-formula="\int_{a}^{b} f(x) dx = F(b) - F(a)">$$\int_{a}^{b} f(x) dx = F(b) - F(a)$$</div>
 
                     <h2>开始创作吧！</h2>
-                    <p>点击"加载模板"按钮可以快速初始化数模国赛论文框架。</p>
+                    <p>直接在此编辑，或清空内容从头开始。导出的 LaTeX 代码会自动包含必要的宏包配置。</p>
                 </div>
             </div>
 

@@ -1,3 +1,43 @@
+/* 本地字体配置（使用开源字体：思源宋体、思源黑体） */
+/* 字体文件需要用户自行下载并放到 fonts/ 目录下 */
+/* 下载地址：https://github.com/googlefonts/noto-cjk/releases */
+
+@font-face {
+    font-family: 'Noto Serif SC';
+    src: url('fonts/NotoSerifSC-Regular.woff2') format('woff2'),
+         url('fonts/NotoSerifSC-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Serif SC';
+    src: url('fonts/NotoSerifSC-Bold.woff2') format('woff2'),
+         url('fonts/NotoSerifSC-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('fonts/NotoSansSC-Regular.woff2') format('woff2'),
+         url('fonts/NotoSansSC-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('fonts/NotoSansSC-Bold.woff2') format('woff2'),
+         url('fonts/NotoSansSC-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* 全局样式重置 */
 * {
     margin: 0;
@@ -174,7 +214,7 @@ body {
     margin: 5px 0;
 }
 
-.editor-area .formula-inline {
+.editor-area .formula_inline {
     background: #fff3cd;
     padding: 2px 6px;
     border-radius: 3px;
@@ -283,6 +323,35 @@ body {
         padding: 6px 12px;
         font-size: 13px;
     }
+}
+
+/* 字体定义 */
+.font-songti {
+    font-family: 'Noto Serif SC', '思源宋体', serif;
+}
+
+.font-heiti {
+    font-family: 'Noto Sans SC', '思源黑体', sans-serif;
+}
+
+/* 工具栏下拉框样式 */
+.toolbar select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.toolbar select:hover {
+    border-color: #667eea;
+}
+
+.toolbar select:focus {
+    outline: none;
+    border-color: #667eea;
 }
 
 /* 加载动画 */

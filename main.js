@@ -8,6 +8,8 @@ let editorArea = null;
 let previewArea = null;
 let statusText = null;
 let debounceTimer = null;
+let templatePreamble = null; // 保存模板的 preamble（可选）
+let savedSelection = null; // 保存编辑器选区（用于字体切换等场景）
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -25,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     editorArea.addEventListener('input', function() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(function() {
+            checkDoubleSpaceIndent();
             updatePreview();
             saveDraft();
         }, 300);
@@ -32,7 +35,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 初始更新预览
     updatePreview();
+    
+    // 保存编辑器选区（用于字体切换等场景）
+    editorArea.addEventListener('mouseup', saveEditorSelection);
+    editorArea.addEventListener('keyup', saveEditorSelection);
 });
+
+// 保存编辑器选区
+function saveEditorSelection() {
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && editorArea.contains(sel.anchorNode)) {
+        savedSelection = sel.getRangeAt(0).cloneRange();
+    }
+}
+
+// 检测双空格并转换为首行缩进
+function checkDoubleSpaceIndent() {
+    const paragraphs = editorArea.querySelectorAll('p, div');
+    paragraphs.forEach(p => {
+        const text = p.textContent;
+        // 检测段落开头是否有两个空格
+        if (text.startsWith('  ')) {
+            // 移除开头的空格
+            const cleanText = text.replace(/^  +/, '');
+            p.textContent = cleanText;
+            // 添加首行缩进样式
+            p.style.textIndent = '2em';
+        }
+    });
+}
 
 // 初始化工具栏
 function initToolbar() {
@@ -45,6 +76,7 @@ function initToolbar() {
     document.getElementById('btnBold').addEventListener('click', toggleBold);
     document.getElementById('btnItalic').addEventListener('click', toggleItalic);
     document.getElementById('btnCenter').addEventListener('click', toggleCenter);
+    document.getElementById('fontSelect').addEventListener('change', changeFont);
 
     // 列表按钮
     document.getElementById('btnUl').addEventListener('click', insertUnorderedList);
@@ -59,6 +91,10 @@ function initToolbar() {
 
     // 模板按钮
     document.getElementById('btnTemplate').addEventListener('click', loadTemplate);
+
+    // 开始和重新加载按钮
+    document.getElementById('btnStart').addEventListener('click', startNewDocument);
+    document.getElementById('btnReload').addEventListener('click', reloadAndClearDraft);
 
     // 导出按钮
     document.getElementById('btnCopy').addEventListener('click', copyLatex);
@@ -87,7 +123,72 @@ function toggleItalic() {
 
 // 切换居中
 function toggleCenter() {
-    document.execCommand('justifyCenter', false, null);
+    // 检查当前是否已居中
+    const isCentered = document.queryCommandState('justifyCenter');
+    
+    if (isCentered) {
+        // 已居中，切换回左对齐
+        document.execCommand('justifyLeft', false, null);
+    } else {
+        // 未居中，设置为居中
+        document.execCommand('justifyCenter', false, null);
+    }
+    editorArea.focus();
+}
+
+// 改变字体
+function changeFont() {
+    const fontSelect = document.getElementById('fontSelect');
+    const selectedFont = fontSelect.value;
+    
+    if (!selectedFont) {
+        updateStatus('请选择字体');
+        return;
+    }
+    
+    // 恢复保存的选区
+    if (savedSelection) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedSelection);
+    }
+    
+    // 检查是否有选中文本
+    const sel = window.getSelection();
+    const selectedText = sel.toString();
+    
+    if (selectedText && sel.rangeCount > 0) {
+        // 有选中文本，用 span 包裹并设置字体
+        const range = sel.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.fontFamily = selectedFont;
+        span.setAttribute('data-font', selectedFont);
+        
+        try {
+            range.surroundContents(span);
+        } catch (e) {
+            // 如果选区跨越多个节点，使用替代方法
+            const fragment = range.extractContents();
+            span.appendChild(fragment);
+            range.insertNode(span);
+        }
+        
+        // 重新设置选区
+        sel.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        sel.addRange(newRange);
+    } else {
+        // 无选中文本，在光标处插入带字体标记的 span
+        const span = document.createElement('span');
+        span.style.fontFamily = selectedFont;
+        span.setAttribute('data-font', selectedFont);
+        span.textContent = '在此输入';
+        insertNodeAtCursor(span);
+    }
+    
+    updatePreview();
+    saveDraft();
     editorArea.focus();
 }
 
@@ -195,8 +296,41 @@ function loadTemplate() {
         });
 }
 
+// 开始新文档（清空编辑器）
+function startNewDocument() {
+    if (!confirm('确定要清空编辑器开始新文档吗？当前内容将丢失。')) return;
+    
+    editorArea.innerHTML = '<h1>新文档</h1><p>在此输入内容...</p>';
+    templatePreamble = null; // 清除模板 preamble
+    updatePreview();
+    saveDraft();
+    updateStatus('已开始新文档');
+}
+
+// 重新加载并删除草稿
+function reloadAndClearDraft() {
+    if (!confirm('确定要删除草稿并重新加载吗？所有未保存的内容将丢失。')) return;
+    
+    // 清除 localStorage 中的草稿
+    try {
+        localStorage.removeItem('modelpaper_draft');
+        localStorage.removeItem('modelpaper_draft_time');
+    } catch (e) {
+        console.error('清除草稿失败：', e);
+    }
+    
+    // 重新加载页面
+    location.reload();
+}
+
 // 应用模板到编辑器
 function applyTemplate(texContent) {
+    // 提取并保存模板的 preamble
+    const preambleMatch = texContent.match(/^([\s\S]*?)\\begin\{document\}/);
+    if (preambleMatch) {
+        templatePreamble = preambleMatch[1].trim();
+    }
+    
     const htmlContent = parseTemplateToHTML(texContent);
     editorArea.innerHTML = htmlContent;
     updatePreview();
@@ -355,25 +489,30 @@ function parseTemplateToHTML(tex) {
 function domToLatex() {
     let latex = '';
 
-    // 添加文档类
-    latex += '\\documentclass[12pt,a4paper]{article}\n\n';
+    // 如果有模板 preamble，使用它；否则使用默认配置
+    if (templatePreamble) {
+        latex += templatePreamble + '\n\n';
+    } else {
+        // 添加文档类
+        latex += '\\documentclass[12pt,a4paper]{article}\n\n';
 
-    // 添加常用宏包
-    latex += '% 中文支持\n';
-    latex += '\\usepackage{ctex}\n';
-    latex += '\\usepackage{fontspec}\n\n';
+        // 添加常用宏包
+        latex += '% 中文支持\n';
+        latex += '\\usepackage{ctex}\n';
+        latex += '\\usepackage{fontspec}\n\n';
 
-    latex += '% 数学公式\n';
-    latex += '\\usepackage{amsmath}\n';
-    latex += '\\usepackage{amssymb}\n\n';
+        latex += '% 数学公式\n';
+        latex += '\\usepackage{amsmath}\n';
+        latex += '\\usepackage{amssymb}\n\n';
 
-    latex += '% 图表\n';
-    latex += '\\usepackage{graphicx}\n';
-    latex += '\\usepackage{float}\n\n';
+        latex += '% 图表\n';
+        latex += '\\usepackage{graphicx}\n';
+        latex += '\\usepackage{float}\n\n';
 
-    latex += '% 页面布局\n';
-    latex += '\\usepackage{geometry}\n';
-    latex += '\\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}\n\n';
+        latex += '% 页面布局\n';
+        latex += '\\usepackage{geometry}\n';
+        latex += '\\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}\n\n';
+    }
 
     latex += '\\begin{document}\n\n';
 
@@ -428,6 +567,11 @@ function convertNodeToLatex(node) {
                 latex += '    ' + formula + '\n';
                 latex += '\\end{equation}\n\n';
             } else {
+                // 检查是否有首行缩进样式
+                const hasIndent = node.style.textIndent === '2em';
+                if (hasIndent) {
+                    latex += '\\indent ';
+                }
                 latex += convertInlineNodes(node) + '\n\n';
             }
             break;
@@ -500,6 +644,17 @@ function convertInlineNodes(node) {
                 latex += '\\textbf{' + getNodeTextContent(child) + '}';
             } else if (tag === 'i' || tag === 'em') {
                 latex += '\\textit{' + getNodeTextContent(child) + '}';
+            } else if (tag === 'font' || (tag === 'span' && child.getAttribute('data-font'))) {
+                // 处理字体标记
+                const fontFace = child.getAttribute('face') || child.style.fontFamily || child.getAttribute('data-font');
+                const content = getNodeTextContent(child);
+                if (fontFace.includes('SimSun') || fontFace.includes('宋体') || fontFace.includes('Noto Serif SC') || fontFace.includes('思源宋体')) {
+                    latex += '{\\songti ' + content + '}';
+                } else if (fontFace.includes('SimHei') || fontFace.includes('黑体') || fontFace.includes('Noto Sans SC') || fontFace.includes('思源黑体')) {
+                    latex += '{\\heiti ' + content + '}';
+                } else {
+                    latex += content;
+                }
             } else if (tag === 'span' || tag === 'u') {
                 latex += getNodeTextContent(child);
             } else {

@@ -11,7 +11,7 @@
 ![Platform](https://img.shields.io/badge/platform-web%20%7C%20offline-lightgrey)
 
 > **🚧 Development Status**  
-> Current version (v1.1.0) is focusing on feature refinement. The next version will prioritize UX/UI improvements.
+> Current version (v1.1.0) has completed the formula assistant and formula input upgrades. The next version will prioritize UX/UI improvements.
 
 A lightweight WYSIWYG LaTeX editor for mathematical modeling contestants. Edit like Word, generate LaTeX code in real time.
 
@@ -28,21 +28,37 @@ It provides a Word-like visual editing area that generates standard `.tex` code 
 ## ✨ Features
 
 - **Split-pane layout**: Visual editor on the left | real-time LaTeX preview on the right
-- **Basic formatting**: H1/H2/H3 headings, bold, italic, center toggle
+- **Basic formatting**: H1/H2/H3 headings (annotated with standard Chinese font sizes 三号/四号/小四), bold, italic, center toggle
 - **Font selection**: Built-in open-source font support (Noto Serif SC, Noto Sans SC) with local loading
 - **Lists**: ordered `enumerate`, unordered `itemize`
-- **Formula shortcuts**: inline `$ $`, display `$$ $$`
+- **Formula input dialog**: visual formula entry with a 35+ symbol quick palette (fractions, roots, sums, integrals, Greek letters, etc.)
+- **Formula assistant**: 70+ common math-modeling formulas organized by model category, insert with one click
 - **Image insertion**: prompts for path and auto-generates the LaTeX `figure` float environment
 - **Built-in template**: complete MCM LaTeX template, initialize your document with one click
 - **Quick actions**: Start new document, Reload (clear draft)
-- **Auto indent**: Type two spaces to automatically convert to first-line indent
 - **One-click export**: copy LaTeX source or download the `.tex` file
 - **Local cache**: `localStorage` draft autosave — content survives page refresh
+
+## 🧮 Formula Assistant
+
+Click the **📚 Formula Assistant** button in the toolbar to open the assistant panel. Browse by model category on the left; each formula shows its name and LaTeX source on the right. **Click any formula to insert it at the editor's cursor position.**
+
+| Category | Contents |
+|----------|----------|
+| Basic Math | fractions, matrices, determinants, piecewise functions, equation systems, Taylor expansion, etc. |
+| Probability & Statistics | mean, variance, normal distribution, Bayes' theorem, Poisson distribution, etc. |
+| Evaluation Models | AHP, TOPSIS, entropy weight, grey relational analysis, Min-Max normalization, etc. |
+| Prediction Models | GM(1,1) grey prediction, linear regression, exponential smoothing, RMSE, MAPE, etc. |
+| Optimization Models | linear programming, transportation problem, multi-objective programming, M/M/1 queueing, etc. |
+| Differential Equations | Logistic growth, SIR epidemic model, Euler's method, Runge-Kutta, etc. |
+| Interpolation & Fitting | Lagrange interpolation, least squares, trapezoidal/Simpson quadrature, etc. |
+
+Each formula is tagged as **inline / display** and generates the correct `$...$` or `$$...$$` environment.
 
 ## ⚠️ Known Limitations (Important)
 
 1. Built on `contenteditable` for simplicity; complex nested layouts may parse incorrectly
-2. V1.0 does not yet support complex tables, multi-level cross-references, or complex algorithm environment
+2. V1.0 does not yet support complex tables, multi-level cross-references, or complex algorithm environments
 3. Generated code is a draft framework only; fine-tune advanced LaTeX syntax manually
 4. Local file read/write via the File System API is planned for V2.0; currently only export/download is supported
 
@@ -82,9 +98,12 @@ ModelPaper-VisualLaTeX/
 - ✅ Local draft caching and `.tex` file export
 - ✅ Load preset MCM paper template
 - ✅ Font selection (Noto Serif SC, Noto Sans SC)
-- ✅ Quick actions (start new document, reload)
-- ✅ Center toggle functionality
-- ✅ Auto first-line indent conversion
+- ✅ Quick actions (Start new document, Reload)
+- ✅ Center toggle
+- ✅ Automatic first-line indent (two leading spaces → 2-character indent)
+- ✅ Formula assistant (70+ common math-modeling formulas by category, one-click insert)
+- ✅ Formula input upgrade (visual dialog + common symbol palette)
+- ✅ Heading font sizes annotated per Chinese typesetting standard (三号/四号/小四)
 
 ### V2.0 (Next iterations)
 
@@ -92,7 +111,6 @@ ModelPaper-VisualLaTeX/
 - [ ] BibTeX reference quick-insert
 - [ ] File System API support: open & save local `.tex`
 - [ ] Algorithm pseudocode environment and more math package shortcuts
-- [ ] Comprehensive UX/UI improvements
 
 ## 🤝 Contributing
 

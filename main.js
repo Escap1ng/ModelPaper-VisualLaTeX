@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 绑定工具栏按钮事件
     initToolbar();
 
+    // 初始化公式工具弹窗
+    initFormulaModal();
+
     // 从 localStorage 恢复草稿
     loadDraft();
 
@@ -85,6 +88,7 @@ function initToolbar() {
     // 公式按钮
     document.getElementById('btnInlineFormula').addEventListener('click', insertInlineFormula);
     document.getElementById('btnBlockFormula').addEventListener('click', insertBlockFormula);
+    document.getElementById('btnFormulaAssistant').addEventListener('click', openFormulaAssistant);
 
     // 图片按钮
     document.getElementById('btnImage').addEventListener('click', insertImage);
@@ -204,32 +208,19 @@ function insertOrderedList() {
     editorArea.focus();
 }
 
-// 插入行内公式
+// 插入行内公式（打开公式工具弹窗）
 function insertInlineFormula() {
-    const formula = prompt('请输入行内公式（LaTeX 格式，如 E=mc^2）：', 'E=mc^2');
-    if (formula) {
-        const span = document.createElement('span');
-        span.className = 'formula-inline';
-        span.setAttribute('data-formula', formula);
-        span.textContent = '$' + formula + '$';
-        insertNodeAtCursor(span);
-        updatePreview();
-        saveDraft();
-    }
+    openFormulaModal('inline', 'input');
 }
 
-// 插入行间公式
+// 插入行间公式（打开公式工具弹窗）
 function insertBlockFormula() {
-    const formula = prompt('请输入行间公式（LaTeX 格式）：', '\\int_{a}^{b} f(x) dx');
-    if (formula) {
-        const div = document.createElement('div');
-        div.className = 'formula-block';
-        div.setAttribute('data-formula', formula);
-        div.textContent = '$$' + formula + '$$';
-        insertNodeAtCursor(div);
-        updatePreview();
-        saveDraft();
-    }
+    openFormulaModal('block', 'input');
+}
+
+// 打开公式助手
+function openFormulaAssistant() {
+    openFormulaModal('inline', 'assistant');
 }
 
 // 插入图片
@@ -770,4 +761,406 @@ function updateStatus(message) {
     if (statusText) {
         statusText.textContent = message;
     }
+}
+
+// ========== 公式工具弹窗（手动输入 + 公式助手） ==========
+
+// 常用 LaTeX 符号面板
+const SYMBOL_PALETTE = [
+    { label: '分数', latex: '\\frac{}{}' },
+    { label: '根式', latex: '\\sqrt{}' },
+    { label: 'n次根', latex: '\\sqrt[n]{}' },
+    { label: '上标', latex: '^{}' },
+    { label: '下标', latex: '_{}' },
+    { label: '求和', latex: '\\sum_{i=1}^{n}' },
+    { label: '求积', latex: '\\prod_{i=1}^{n}' },
+    { label: '积分', latex: '\\int_{a}^{b}' },
+    { label: '二重积分', latex: '\\iint_{D}' },
+    { label: '极限', latex: '\\lim_{x \\to 0}' },
+    { label: '∞', latex: '\\infty' },
+    { label: '≈', latex: '\\approx' },
+    { label: '≥', latex: '\\geq' },
+    { label: '≤', latex: '\\leq' },
+    { label: '≠', latex: '\\neq' },
+    { label: '±', latex: '\\pm' },
+    { label: '∈', latex: '\\in' },
+    { label: '⊂', latex: '\\subset' },
+    { label: '∪', latex: '\\cup' },
+    { label: '∩', latex: '\\cap' },
+    { label: '向量', latex: '\\vec{}' },
+    { label: '偏导', latex: '\\frac{\\partial}{\\partial x}' },
+    { label: '点乘', latex: '\\cdot' },
+    { label: 'α', latex: '\\alpha' },
+    { label: 'β', latex: '\\beta' },
+    { label: 'γ', latex: '\\gamma' },
+    { label: 'θ', latex: '\\theta' },
+    { label: 'λ', latex: '\\lambda' },
+    { label: 'μ', latex: '\\mu' },
+    { label: 'σ', latex: '\\sigma' },
+    { label: 'ω', latex: '\\omega' },
+    { label: 'π', latex: '\\pi' },
+    { label: 'Δ', latex: '\\Delta' },
+    { label: 'Σ', latex: '\\Sigma' }
+];
+
+// 常用数模公式库（type: inline=行内公式, block=行间公式）
+const FORMULA_LIBRARY = [
+    {
+        name: '基础数学',
+        icon: '∑',
+        formulas: [
+            { name: '分数', latex: '\\frac{a}{b}', type: 'inline' },
+            { name: '根式', latex: '\\sqrt{a}', type: 'inline' },
+            { name: 'n 次根式', latex: '\\sqrt[n]{a}', type: 'inline' },
+            { name: '求和', latex: '\\sum_{i=1}^{n} x_i', type: 'inline' },
+            { name: '求积', latex: '\\prod_{i=1}^{n} x_i', type: 'inline' },
+            { name: '积分', latex: '\\int_{a}^{b} f(x) \\, dx', type: 'inline' },
+            { name: '极限', latex: '\\lim_{x \\to 0} \\frac{f(x)}{x}', type: 'inline' },
+            { name: '导数', latex: "f'(x) = \\lim_{\\Delta x \\to 0} \\frac{f(x + \\Delta x) - f(x)}{\\Delta x}", type: 'block' },
+            { name: '矩阵', latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', type: 'block' },
+            { name: '行列式', latex: '\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}', type: 'block' },
+            { name: '分段函数', latex: 'f(x) = \\begin{cases} x^2, & x \\geq 0 \\\\ -x, & x < 0 \\end{cases}', type: 'block' },
+            { name: '方程组', latex: '\\begin{cases} x + y = 1 \\\\ x - y = 2 \\end{cases}', type: 'block' },
+            { name: '牛顿-莱布尼茨公式', latex: '\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)', type: 'block' },
+            { name: '泰勒展开', latex: 'f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!} (x-a)^n', type: 'block' }
+        ]
+    },
+    {
+        name: '概率统计',
+        icon: 'σ',
+        formulas: [
+            { name: '样本均值', latex: '\\bar{x} = \\frac{1}{n} \\sum_{i=1}^{n} x_i', type: 'inline' },
+            { name: '样本方差', latex: 's^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2', type: 'block' },
+            { name: '样本标准差', latex: 's = \\sqrt{\\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2}', type: 'block' },
+            { name: '期望', latex: 'E(X) = \\sum_{i=1}^{n} x_i p_i', type: 'inline' },
+            { name: '方差', latex: 'D(X) = E[(X - E(X))^2]', type: 'inline' },
+            { name: '协方差', latex: 'Cov(X, Y) = E[(X - E(X))(Y - E(Y))]', type: 'inline' },
+            { name: '相关系数', latex: '\\rho_{XY} = \\frac{Cov(X, Y)}{\\sqrt{D(X)} \\sqrt{D(Y)}}', type: 'block' },
+            { name: '条件概率', latex: 'P(A|B) = \\frac{P(AB)}{P(B)}', type: 'inline' },
+            { name: '贝叶斯公式', latex: 'P(A_i|B) = \\frac{P(B|A_i) P(A_i)}{\\sum_{j} P(B|A_j) P(A_j)}', type: 'block' },
+            { name: '正态分布密度', latex: 'f(x) = \\frac{1}{\\sqrt{2\\pi} \\sigma} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}', type: 'block' },
+            { name: '均匀分布', latex: 'f(x) = \\frac{1}{b-a}, \\quad a \\leq x \\leq b', type: 'inline' },
+            { name: '二项分布', latex: 'P(X=k) = C_n^k p^k (1-p)^{n-k}', type: 'inline' },
+            { name: '泊松分布', latex: 'P(X=k) = \\frac{\\lambda^k e^{-\\lambda}}{k!}', type: 'inline' },
+            { name: '指数分布', latex: 'f(x) = \\lambda e^{-\\lambda x}, \\quad x \\geq 0', type: 'inline' },
+            { name: '中心极限定理', latex: '\\frac{\\bar{X} - \\mu}{\\sigma/\\sqrt{n}} \\sim N(0, 1)', type: 'block' }
+        ]
+    },
+    {
+        name: '评价模型',
+        icon: '★',
+        formulas: [
+            { name: 'Min-Max 归一化（正向）', latex: "x'_{ij} = \\frac{x_{ij} - \\min_j x_{ij}}{\\max_j x_{ij} - \\min_j x_{ij}}", type: 'block' },
+            { name: 'Min-Max 归一化（逆向）', latex: "x'_{ij} = \\frac{\\max_j x_{ij} - x_{ij}}{\\max_j x_{ij} - \\min_j x_{ij}}", type: 'block' },
+            { name: 'Z-score 标准化', latex: "x'_{ij} = \\frac{x_{ij} - \\bar{x}_j}{s_j}", type: 'inline' },
+            { name: '熵权法-比重', latex: 'p_{ij} = \\frac{x_{ij}}{\\sum_{i=1}^{n} x_{ij}}', type: 'block' },
+            { name: '熵权法-熵值', latex: 'H_j = -\\frac{1}{\\ln n} \\sum_{i=1}^{n} p_{ij} \\ln p_{ij}', type: 'block' },
+            { name: '熵权法-权重', latex: 'w_j = \\frac{1 - H_j}{m - \\sum_{j=1}^{m} H_j}', type: 'block' },
+            { name: 'AHP 一致性指标', latex: 'CI = \\frac{\\lambda_{\\max} - n}{n - 1}', type: 'block' },
+            { name: 'AHP 一致性比率', latex: 'CR = \\frac{CI}{RI} < 0.1', type: 'block' },
+            { name: 'TOPSIS 正理想解距离', latex: 'd_i^{+} = \\sqrt{\\sum_{j=1}^{m} (v_{ij} - v_j^{+})^2}', type: 'block' },
+            { name: 'TOPSIS 负理想解距离', latex: 'd_i^{-} = \\sqrt{\\sum_{j=1}^{m} (v_{ij} - v_j^{-})^2}', type: 'block' },
+            { name: 'TOPSIS 贴近度', latex: 'C_i = \\frac{d_i^{-}}{d_i^{+} + d_i^{-}}', type: 'block' },
+            { name: '加权综合评价', latex: 'S_i = \\sum_{j=1}^{m} w_j r_{ij}', type: 'inline' },
+            { name: '灰色关联系数', latex: '\\xi_i(k) = \\frac{\\min_i \\min_k |x_0(k)-x_i(k)| + \\rho \\max_i \\max_k |x_0(k)-x_i(k)|}{|x_0(k)-x_i(k)| + \\rho \\max_i \\max_k |x_0(k)-x_i(k)|}', type: 'block' },
+            { name: '灰色关联度', latex: 'r_i = \\frac{1}{n} \\sum_{k=1}^{n} \\xi_i(k)', type: 'block' },
+            { name: '模糊综合评价', latex: 'B = A \\circ R', type: 'inline' }
+        ]
+    },
+    {
+        name: '预测模型',
+        icon: '📈',
+        formulas: [
+            { name: '一元线性回归', latex: 'y = \\beta_0 + \\beta_1 x + \\varepsilon', type: 'inline' },
+            { name: '回归系数估计', latex: '\\hat{\\beta}_1 = \\frac{\\sum_{i=1}^{n} (x_i - \\bar{x})(y_i - \\bar{y})}{\\sum_{i=1}^{n} (x_i - \\bar{x})^2}', type: 'block' },
+            { name: '多元线性回归', latex: 'y = \\beta_0 + \\beta_1 x_1 + \\cdots + \\beta_p x_p + \\varepsilon', type: 'inline' },
+            { name: '逻辑回归', latex: 'P = \\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 x)}}', type: 'block' },
+            { name: 'GM(1,1) 累加生成', latex: "x^{(1)}(k) = \\sum_{i=1}^{k} x^{(0)}(i)", type: 'block' },
+            { name: 'GM(1,1) 时间响应式', latex: "\\hat{x}^{(1)}(k+1) = \\left( x^{(0)}(1) - \\frac{b}{a} \\right) e^{-ak} + \\frac{b}{a}", type: 'block' },
+            { name: 'GM(1,1) 预测还原', latex: "\\hat{x}^{(0)}(k+1) = \\hat{x}^{(1)}(k+1) - \\hat{x}^{(1)}(k)", type: 'block' },
+            { name: '一次指数平滑', latex: 'S_t = \\alpha x_t + (1 - \\alpha) S_{t-1}', type: 'inline' },
+            { name: '移动平均', latex: '\\bar{x}_t = \\frac{1}{n} \\sum_{i=1}^{n} x_{t-i}', type: 'inline' },
+            { name: '指数增长模型', latex: 'N(t) = N_0 e^{rt}', type: 'inline' },
+            { name: 'Malthus 模型', latex: '\\frac{dN}{dt} = rN', type: 'block' },
+            { name: '均方根误差 RMSE', latex: 'RMSE = \\sqrt{\\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2}', type: 'block' },
+            { name: '平均绝对百分比误差 MAPE', latex: 'MAPE = \\frac{1}{n} \\sum_{i=1}^{n} \\left| \\frac{y_i - \\hat{y}_i}{y_i} \\right| \\times 100\\%', type: 'block' },
+            { name: '拟合优度 R²', latex: 'R^2 = 1 - \\frac{\\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2}{\\sum_{i=1}^{n} (y_i - \\bar{y})^2}', type: 'block' }
+        ]
+    },
+    {
+        name: '优化模型',
+        icon: '⚙',
+        formulas: [
+            { name: '线性规划（标准形）', latex: '\\min z = \\sum_{j=1}^{n} c_j x_j, \\quad s.t. \\ \\sum_{j=1}^{n} a_{ij} x_j \\leq b_i, \\ x_j \\geq 0', type: 'block' },
+            { name: '0-1 整数变量', latex: 'x_j \\in \\{0, 1\\}', type: 'inline' },
+            { name: '运输问题目标', latex: '\\min z = \\sum_{i=1}^{m} \\sum_{j=1}^{n} c_{ij} x_{ij}', type: 'block' },
+            { name: '产销平衡约束', latex: '\\sum_{j=1}^{n} x_{ij} = a_i, \\quad \\sum_{i=1}^{m} x_{ij} = b_j', type: 'block' },
+            { name: '多目标规划', latex: '\\min F(x) = (f_1(x), f_2(x), \\cdots, f_k(x))^T', type: 'block' },
+            { name: '加权法转化', latex: '\\min \\sum_{i=1}^{k} w_i f_i(x)', type: 'inline' },
+            { name: '动态规划递推', latex: 'f_k(s_k) = \\min_{x_k} \\{ v_k(s_k, x_k) + f_{k+1}(s_{k+1}) \\}', type: 'block' },
+            { name: 'M/M/1 队长', latex: 'L_s = \\frac{\\lambda}{\\mu - \\lambda}', type: 'inline' },
+            { name: 'M/M/1 等待时间', latex: 'W_s = \\frac{1}{\\mu - \\lambda}', type: 'inline' },
+            { name: 'M/M/1 空闲率', latex: 'P_0 = 1 - \\frac{\\lambda}{\\mu}', type: 'inline' }
+        ]
+    },
+    {
+        name: '微分方程',
+        icon: 'dx',
+        formulas: [
+            { name: '一阶常微分方程', latex: '\\frac{dy}{dx} = f(x, y)', type: 'inline' },
+            { name: '可分离变量', latex: '\\int \\frac{dy}{h(y)} = \\int g(x) \\, dx + C', type: 'block' },
+            { name: 'Logistic 增长模型', latex: '\\frac{dN}{dt} = rN \\left( 1 - \\frac{N}{K} \\right)', type: 'block' },
+            { name: 'Logistic 模型解', latex: 'N(t) = \\frac{K}{1 + \\left( \\frac{K}{N_0} - 1 \\right) e^{-rt}}', type: 'block' },
+            { name: '指数衰减', latex: '\\frac{dN}{dt} = -\\lambda N', type: 'inline' },
+            { name: '二阶常系数齐次方程', latex: "y'' + py' + qy = 0", type: 'inline' },
+            { name: 'SIR 模型', latex: '\\begin{cases} \\frac{dS}{dt} = -\\beta SI \\\\ \\frac{dI}{dt} = \\beta SI - \\gamma I \\\\ \\frac{dR}{dt} = \\gamma I \\end{cases}', type: 'block' },
+            { name: 'SI 模型', latex: '\\frac{dI}{dt} = \\beta SI, \\quad S + I = N', type: 'block' },
+            { name: '欧拉法', latex: 'y_{k+1} = y_k + h f(x_k, y_k)', type: 'inline' },
+            { name: '四阶龙格-库塔法', latex: 'y_{k+1} = y_k + \\frac{h}{6} (k_1 + 2k_2 + 2k_3 + k_4)', type: 'block' }
+        ]
+    },
+    {
+        name: '插值拟合',
+        icon: '~',
+        formulas: [
+            { name: '拉格朗日基函数', latex: 'l_i(x) = \\prod_{j \\neq i} \\frac{x - x_j}{x_i - x_j}', type: 'block' },
+            { name: '拉格朗日插值多项式', latex: 'L_n(x) = \\sum_{i=0}^{n} y_i l_i(x)', type: 'block' },
+            { name: '最小二乘拟合', latex: '\\min \\sum_{i=1}^{n} (y_i - f(x_i))^2', type: 'block' },
+            { name: '梯形求积公式', latex: '\\int_{a}^{b} f(x) \\, dx \\approx \\frac{b-a}{2} (f(a) + f(b))', type: 'block' },
+            { name: '辛普森求积公式', latex: '\\int_{a}^{b} f(x) \\, dx \\approx \\frac{b-a}{6} \\left[ f(a) + 4f\\left(\\frac{a+b}{2}\\right) + f(b) \\right]', type: 'block' }
+        ]
+    }
+];
+
+// HTML 转义（用于公式库展示）
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 打开公式工具弹窗
+function openFormulaModal(mode, tab) {
+    const modal = document.getElementById('formulaModal');
+
+    // 保存编辑器选区（弹窗聚焦会劫持 DOM 选区）
+    saveEditorSelection();
+
+    // 设置插入模式
+    const radio = document.querySelector('input[name="formulaMode"][value="' + (mode || 'inline') + '"]');
+    if (radio) radio.checked = true;
+
+    switchModalTab(tab || 'input');
+    modal.classList.add('show');
+
+    if (tab !== 'assistant') {
+        document.getElementById('formulaInput').focus();
+    }
+}
+
+// 关闭公式工具弹窗
+function closeFormulaModal() {
+    document.getElementById('formulaModal').classList.remove('show');
+    if (editorArea) editorArea.focus();
+}
+
+// 切换弹窗标签页
+function switchModalTab(tab) {
+    document.querySelectorAll('.modal-tab').forEach(function(t) {
+        t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-panel').forEach(function(p) {
+        p.classList.toggle('active', p.id === 'tab-' + tab);
+    });
+    if (tab === 'assistant') {
+        renderFormulaAssistant();
+    }
+}
+
+// 渲染符号面板
+function renderSymbolPalette() {
+    const palette = document.getElementById('symbolPalette');
+    palette.innerHTML = '';
+    SYMBOL_PALETTE.forEach(function(sym) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.title = sym.label;
+        btn.textContent = sym.label;
+        btn.addEventListener('click', function() {
+            insertSymbolIntoTextarea(sym.latex);
+        });
+        palette.appendChild(btn);
+    });
+}
+
+// 向公式输入框光标处插入符号
+function insertSymbolIntoTextarea(symbol) {
+    const ta = document.getElementById('formulaInput');
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.slice(0, start) + symbol + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + symbol.length;
+    ta.focus();
+}
+
+// 从手动输入插入公式
+function insertFormulaFromInput() {
+    const latex = document.getElementById('formulaInput').value.trim();
+    if (!latex) {
+        updateStatus('请输入公式内容');
+        return;
+    }
+    const mode = document.querySelector('input[name="formulaMode"]:checked').value;
+    insertFormulaNode(latex, mode);
+    document.getElementById('formulaInput').value = '';
+    closeFormulaModal();
+}
+
+// 在编辑器光标处插入公式节点
+function insertFormulaNode(latex, type) {
+    // 恢复编辑器中的选区（弹窗会劫持 DOM 选区，需先恢复再插入）
+    restoreEditorSelection();
+
+    if (type === 'block') {
+        const div = document.createElement('div');
+        div.className = 'formula-block';
+        div.setAttribute('data-formula', latex);
+        div.textContent = '$$' + latex + '$$';
+        insertNodeAtCursor(div);
+    } else {
+        const span = document.createElement('span');
+        span.className = 'formula-inline';
+        span.setAttribute('data-formula', latex);
+        span.textContent = '$' + latex + '$';
+        insertNodeAtCursor(span);
+    }
+    updatePreview();
+    saveDraft();
+    updateStatus('公式已插入');
+}
+
+// 恢复编辑器选区（无有效选区时定位到编辑器末尾）
+function restoreEditorSelection() {
+    const sel = window.getSelection();
+    let range = null;
+
+    if (savedSelection && savedSelection.commonAncestorContainer) {
+        if (editorArea.contains(savedSelection.commonAncestorContainer)) {
+            range = savedSelection.cloneRange();
+        }
+    }
+
+    if (!range) {
+        range = document.createRange();
+        range.selectNodeContents(editorArea);
+        range.collapse(false); // 折叠到末尾
+    }
+
+    sel.removeAllRanges();
+    sel.addRange(range);
+    editorArea.focus();
+}
+
+// 渲染公式助手
+let currentFormulaCategory = null;
+
+function renderFormulaAssistant() {
+    const catsEl = document.getElementById('assistantCats');
+    const listEl = document.getElementById('assistantList');
+
+    catsEl.innerHTML = '';
+    FORMULA_LIBRARY.forEach(function(cat, idx) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cat-item' + (idx === 0 ? ' active' : '');
+        btn.textContent = cat.icon + ' ' + cat.name;
+        btn.addEventListener('click', function() {
+            currentFormulaCategory = cat;
+            catsEl.querySelectorAll('.cat-item').forEach(function(c) {
+                c.classList.remove('active');
+            });
+            btn.classList.add('active');
+            renderFormulaList(cat);
+        });
+        catsEl.appendChild(btn);
+    });
+
+    currentFormulaCategory = FORMULA_LIBRARY[0];
+    renderFormulaList(currentFormulaCategory);
+}
+
+// 渲染分类下的公式列表
+function renderFormulaList(cat) {
+    const listEl = document.getElementById('assistantList');
+    listEl.innerHTML = '';
+
+    const hint = document.createElement('div');
+    hint.className = 'assistant-hint';
+    hint.textContent = '共 ' + cat.formulas.length + ' 个公式，点击即可插入到编辑器光标处';
+    listEl.appendChild(hint);
+
+    cat.formulas.forEach(function(f) {
+        const item = document.createElement('div');
+        item.className = 'formula-item';
+        item.title = '点击插入' + (f.type === 'block' ? '行间' : '行内') + '公式';
+
+        const nameRow = document.createElement('div');
+        nameRow.className = 'formula-item-name';
+        nameRow.textContent = f.name;
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = f.type === 'block' ? '行间' : '行内';
+        nameRow.appendChild(badge);
+
+        const latexCode = document.createElement('code');
+        latexCode.className = 'formula-item-latex';
+        latexCode.textContent = f.latex;
+
+        item.appendChild(nameRow);
+        item.appendChild(latexCode);
+
+        item.addEventListener('click', function() {
+            insertFormulaNode(f.latex, f.type || 'inline');
+            closeFormulaModal();
+        });
+        listEl.appendChild(item);
+    });
+}
+
+// 初始化公式工具弹窗
+function initFormulaModal() {
+    renderSymbolPalette();
+
+    // 标签切换
+    document.querySelectorAll('.modal-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            switchModalTab(tab.dataset.tab);
+        });
+    });
+
+    // 关闭按钮
+    document.getElementById('formulaModalClose').addEventListener('click', closeFormulaModal);
+
+    // 点击遮罩关闭
+    document.getElementById('formulaModal').addEventListener('click', function(e) {
+        if (e.target === this) closeFormulaModal();
+    });
+
+    // 插入按钮
+    document.getElementById('btnInsertFormula').addEventListener('click', insertFormulaFromInput);
+
+    // 文本框回车插入（Ctrl+Enter）
+    document.getElementById('formulaInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            insertFormulaFromInput();
+        }
+    });
+
+    // Esc 关闭
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('formulaModal').classList.contains('show')) {
+            closeFormulaModal();
+        }
+    });
 }

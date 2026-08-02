@@ -1,5 +1,7 @@
 # ModelPaper-VisualLaTeX
 
+**中文** | [English](README.en.md)
+
 ![License](https://img.shields.io/github/license/Escap1ng/ModelPaper-VisualLaTeX?color=blue)
 ![HTML](https://img.shields.io/badge/HTML-纯原生-orange)
 ![CSS](https://img.shields.io/badge/CSS-纯原生-blue)
@@ -58,7 +60,8 @@ ModelPaper-VisualLaTeX/
 ├── main.js                 # 编辑器核心、DOM转LaTeX转换逻辑
 ├── templates/
 │   └── mcm_template.tex    # 数模国赛LaTeX基础模板
-└── README.md               # 项目说明
+├── README.md               # 项目说明（中文）
+└── README.en.md            # 项目说明（English）
 ```
 
 ## 📅 开发规划

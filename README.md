@@ -1,7 +1,6 @@
 # ModelPaper-VisualLaTeX
 
 ![License](https://img.shields.io/github/license/Escap1ng/ModelPaper-VisualLaTeX?color=blue)
-![GitHub stars](https://img.shields.io/github/stars/Escap1ng/ModelPaper-VisualLaTeX?style=social)
 ![HTML](https://img.shields.io/badge/HTML-纯原生-orange)
 ![CSS](https://img.shields.io/badge/CSS-纯原生-blue)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)

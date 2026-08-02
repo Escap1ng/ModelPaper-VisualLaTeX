@@ -2,6 +2,7 @@
 
 **中文** | [English](README.en.md)
 
+![Version](https://img.shields.io/github/v/release/Escap1ng/ModelPaper-VisualLaTeX?color=green&label=Version)
 ![License](https://img.shields.io/github/license/Escap1ng/ModelPaper-VisualLaTeX?color=blue)
 ![HTML](https://img.shields.io/badge/HTML-纯原生-orange)
 ![CSS](https://img.shields.io/badge/CSS-纯原生-blue)

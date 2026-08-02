@@ -1,0 +1,301 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* 主容器 */
+.container {
+    max-width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 顶部标题栏 */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.header p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+/* 工具栏 */
+.toolbar {
+    background: white;
+    padding: 12px 20px;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.toolbar button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.toolbar button:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.toolbar button:active {
+    transform: translateY(0);
+}
+
+.toolbar button.primary {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.toolbar button.primary:hover {
+    background: #5568d3;
+}
+
+.toolbar button.success {
+    background: #48bb78;
+    color: white;
+    border-color: #48bb78;
+}
+
+.toolbar button.success:hover {
+    background: #38a169;
+}
+
+.toolbar .separator {
+    width: 1px;
+    height: 30px;
+    background: #ddd;
+    margin: 0 8px;
+}
+
+/* 主内容区域 - 双栏布局 */
+.main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* 左侧编辑区 */
+.editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-right: 2px solid #e0e0e0;
+}
+
+.panel-header {
+    background: #f8f9fa;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: 600;
+    font-size: 16px;
+    color: #495057;
+}
+
+.editor-area {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    outline: none;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.editor-area:focus {
+    background: #fafbfc;
+}
+
+/* 编辑器内容样式 */
+.editor-area h1 {
+    font-size: 28px;
+    font-weight: bold;
+    margin: 20px 0 15px 0;
+    color: #2c3e50;
+}
+
+.editor-area h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 18px 0 12px 0;
+    color: #34495e;
+}
+
+.editor-area h3 {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+    color: #34495e;
+}
+
+.editor-area p {
+    margin: 10px 0;
+    text-align: justify;
+}
+
+.editor-area ul, .editor-area ol {
+    margin: 10px 0;
+    padding-left: 30px;
+}
+
+.editor-area li {
+    margin: 5px 0;
+}
+
+.editor-area .formula-inline {
+    background: #fff3cd;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #856404;
+}
+
+.editor-area .formula-block {
+    background: #d1ecf1;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 15px 0;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.editor-area img {
+    max-width: 100%;
+    height: auto;
+    margin: 15px 0;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+}
+
+/* 右侧预览区 */
+.preview-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+.preview-area {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+/* 状态栏 */
+.status-bar {
+    background: #2d3748;
+    color: #a0aec0;
+    padding: 8px 20px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-bar .status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #48bb78;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .editor-panel {
+        border-right: none;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .toolbar {
+        padding: 10px;
+    }
+
+    .toolbar button {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+/* 加载动画 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

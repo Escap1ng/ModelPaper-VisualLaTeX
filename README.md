@@ -1,4 +1,12 @@
-# ModelPaper-WYSIWYG-LaTeX
+# ModelPaper-VisualLaTeX
+
+![License](https://img.shields.io/github/license/Escap1ng/ModelPaper-VisualLaTeX?color=blue)
+![GitHub stars](https://img.shields.io/github/stars/Escap1ng/ModelPaper-VisualLaTeX?style=social)
+![HTML](https://img.shields.io/badge/HTML-纯原生-orange)
+![CSS](https://img.shields.io/badge/CSS-纯原生-blue)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
+![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
+![Platform](https://img.shields.io/badge/platform-web%20%7C%20offline-lightgrey)
 
 面向数学建模参赛者，轻量化可视化编辑器，类Word操作，实时生成LaTeX代码
 
@@ -35,7 +43,7 @@ Overleaf 属于原生代码编辑器，缺少可视化排版体验；传统 Word
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/你的用户名/ModelPaper-WYSIWYG-LaTeX.git
+git clone https://github.com/Escap1ng/ModelPaper-VisualLaTeX.git
 ```
 
 ### 2. 进入项目文件夹，直接双击打开 `index.html`
@@ -45,7 +53,7 @@ git clone https://github.com/你的用户名/ModelPaper-WYSIWYG-LaTeX.git
 ## 📂 项目结构
 
 ```
-ModelPaper-WYSIWYG-LaTeX/
+ModelPaper-VisualLaTeX/
 ├── index.html              # 主页面（页面布局、工具栏）
 ├── style.css               # 全局样式
 ├── main.js                 # 编辑器核心、DOM转LaTeX转换逻辑

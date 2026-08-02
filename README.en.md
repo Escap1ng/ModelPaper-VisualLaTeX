@@ -13,7 +13,7 @@
 > **🚧 Development Status**  
 > Current version (v1.1.0) has completed the formula assistant and formula input upgrades. The next version will prioritize UX/UI improvements.
 
-A lightweight WYSIWYG LaTeX editor for mathematical modeling contestants. Edit like Word, generate LaTeX code in real time.
+A visual LaTeX editor for mathematical modeling contestants with a built-in formula assistant for common math-modeling formulas. Edit like Word, generate LaTeX code in real time.
 
 ## 📖 Introduction
 
@@ -58,7 +58,7 @@ Each formula is tagged as **inline / display** and generates the correct `$...$`
 ## ⚠️ Known Limitations (Important)
 
 1. Built on `contenteditable` for simplicity; complex nested layouts may parse incorrectly
-2. V1.0 does not yet support complex tables, multi-level cross-references, or complex algorithm environments
+2. V1.1.0 does not yet support complex tables, multi-level cross-references, or complex algorithm environments
 3. Generated code is a draft framework only; fine-tune advanced LaTeX syntax manually
 4. Local file read/write via the File System API is planned for V2.0; currently only export/download is supported
 

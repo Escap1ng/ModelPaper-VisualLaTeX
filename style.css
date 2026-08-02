@@ -178,23 +178,23 @@ body {
     background: #fafbfc;
 }
 
-/* 编辑器内容样式 */
+/* 编辑器内容样式（标题按数模规范字号：三号/四号/小四） */
 .editor-area h1 {
-    font-size: 28px;
+    font-size: 21px; /* 三号 ≈ 16pt */
     font-weight: bold;
     margin: 20px 0 15px 0;
     color: #2c3e50;
 }
 
 .editor-area h2 {
-    font-size: 24px;
+    font-size: 19px; /* 四号 ≈ 14pt */
     font-weight: bold;
     margin: 18px 0 12px 0;
     color: #34495e;
 }
 
 .editor-area h3 {
-    font-size: 20px;
+    font-size: 16px; /* 小四 = 12pt */
     font-weight: bold;
     margin: 15px 0 10px 0;
     color: #34495e;
@@ -214,7 +214,7 @@ body {
     margin: 5px 0;
 }
 
-.editor-area .formula_inline {
+.editor-area .formula-inline {
     background: #fff3cd;
     padding: 2px 6px;
     border-radius: 3px;
@@ -367,4 +367,301 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* ===== 公式工具弹窗 ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-dialog {
+    width: 720px;
+    max-width: 92vw;
+    max-height: 85vh;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+}
+
+.modal-tab {
+    padding: 6px 14px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.modal-tab:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.modal-tab.active {
+    background: white;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* 手动输入 Tab */
+.formula-mode-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.mode-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.mode-option code {
+    background: #f1f3f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.symbol-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    max-height: 130px;
+    overflow-y: auto;
+}
+
+.symbol-palette button {
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    transition: all 0.15s;
+}
+
+.symbol-palette button:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+#formulaInput {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 90px;
+    box-sizing: border-box;
+}
+
+#formulaInput:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.modal-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-insert {
+    padding: 10px 28px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-insert:hover {
+    background: #5568d3;
+}
+
+/* 公式助手 Tab */
+.assistant-layout {
+    display: flex;
+    gap: 14px;
+    min-height: 360px;
+}
+
+.assistant-cats {
+    width: 150px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cat-item {
+    padding: 9px 12px;
+    border: none;
+    background: #f1f3f5;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+    transition: all 0.15s;
+}
+
+.cat-item:hover {
+    background: #e2e8f0;
+}
+
+.cat-item.active {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+}
+
+.assistant-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.assistant-hint {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.formula-item {
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+}
+
+.formula-item:hover {
+    border-color: #667eea;
+    background: #f5f6ff;
+    transform: translateX(2px);
+}
+
+.formula-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.formula-item-name .badge {
+    font-size: 11px;
+    font-weight: 400;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #eef2ff;
+    color: #667eea;
+    margin-left: 6px;
+}
+
+.formula-item-latex {
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #0c5460;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+/* 响应式：小屏幕时公式助手改为上下布局 */
+@media (max-width: 768px) {
+    .assistant-layout {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .assistant-cats {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
 }

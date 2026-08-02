@@ -1,0 +1,184 @@
+% 数学建模国赛论文模板
+% Mathematical Contest in Modeling LaTeX Template
+
+\documentclass[12pt,a4paper]{article}
+
+% 中文支持
+\usepackage{ctex}
+\usepackage{fontspec}
+
+% 数学公式
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+% 图表
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% 页面布局
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% 超链接
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=blue,
+    urlcolor=blue,
+    citecolor=cyan,
+}
+
+% 代码块
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+% 算法伪代码
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% 标题信息
+\title{\textbf{论文题目}}
+\author{队伍名称 \\ 队员：队员1，队员2，队员3 \\ 指导教师：教师姓名}
+\date{\today}
+
+\begin{document}
+
+% 摘要页
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+在这里输入摘要内容。摘要应该简明扼要地说明论文的主要问题、方法、结果和结论。
+
+\textbf{关键词：} 关键词1，关键词2，关键词3
+\end{abstract}
+
+\newpage
+
+% 目录
+\tableofcontents
+\newpage
+
+% 正文开始
+\section{问题重述}
+
+\subsection{问题背景}
+在这里描述问题的背景信息。
+
+\subsection{需要解决的问题}
+在这里列出需要解决的具体问题。
+
+\section{问题分析}
+
+对问题进行详细分析，说明解题思路。
+
+\section{模型假设}
+
+列出模型的基本假设：
+
+\begin{itemize}
+    \item 假设1：描述第一个假设
+    \item 假设2：描述第二个假设
+    \item 假设3：描述第三个假设
+\end{itemize}
+
+\section{符号说明}
+
+\begin{table}[H]
+\centering
+\caption{符号说明}
+\begin{tabular}{cl}
+\toprule
+符号 & 说明 \\
+\midrule
+$x$ & 变量说明 \\
+$y$ & 变量说明 \\
+$\alpha$ & 参数说明 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{模型建立与求解}
+
+\subsection{模型一：XXX模型}
+
+\subsubsection{模型建立}
+在这里建立数学模型。
+
+行内公式示例：$E = mc^2$
+
+行间公式示例：
+\begin{equation}
+    \int_{a}^{b} f(x) dx = F(b) - F(a)
+\end{equation}
+
+\subsubsection{模型求解}
+在这里求解模型，可以插入图片：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{example-image.png}
+    \caption{图片标题}
+    \label{fig:example}
+\end{figure}
+
+\subsection{模型二：XXX模型}
+
+继续建立和求解其他模型。
+
+\section{模型检验}
+
+对模型进行检验和验证。
+
+\section{结果分析}
+
+分析模型结果，讨论优缺点。
+
+\section{结论与展望}
+
+\subsection{主要结论}
+总结论文的主要结论。
+
+\subsection{模型改进与推广}
+讨论模型的改进方向和推广价值。
+
+% 参考文献
+\begin{thebibliography}{99}
+\bibitem{ref1} 作者1, 作者2. 文章标题[J]. 期刊名称, 年份, 卷(期): 页码.
+\bibitem{ref2} 作者. 书名[M]. 出版地: 出版社, 年份.
+\bibitem{ref3} 作者. 论文标题[D]. 城市: 学校名称, 年份.
+\end{thebibliography}
+
+% 附录
+\newpage
+\appendix
+\section{附录}
+
+\subsection{主要代码}
+
+\begin{lstlisting}[language=Python, caption=示例代码]
+import numpy as np
+
+def example_function(x):
+    """
+    示例函数
+    """
+    return x**2 + 2*x + 1
+\end{lstlisting}
+
+\end{document}

@@ -11,14 +11,14 @@
         <!-- 顶部标题栏 -->
         <div class="header">
             <h1>📝 ModelPaper - WYSIWYG LaTeX 编辑器</h1>
-            <p>面向数学建模参赛者，轻量化可视化编辑器，实时生成 LaTeX 代码</p>
+            <p>面向数学建模参赛者的可视化 LaTeX 编辑器，内置常用数模公式助手，实时生成 LaTeX 代码</p>
         </div>
 
         <!-- 工具栏 -->
         <div class="toolbar">
-            <button id="btnH1" title="一级标题">H1</button>
-            <button id="btnH2" title="二级标题">H2</button>
-            <button id="btnH3" title="三级标题">H3</button>
+            <button id="btnH1" title="一级标题（三号）">H1 三号</button>
+            <button id="btnH2" title="二级标题（四号）">H2 四号</button>
+            <button id="btnH3" title="三级标题（小四）">H3 小四</button>
 
             <div class="separator"></div>
 
@@ -42,6 +42,7 @@
 
             <button id="btnInlineFormula" title="行内公式">$ 公式 $</button>
             <button id="btnBlockFormula" title="行间公式">$$ 公式 $$</button>
+            <button id="btnFormulaAssistant" title="公式助手 - 常用数模公式库">📚 公式助手</button>
             <button id="btnImage" title="插入图片">🖼 图片</button>
 
             <div class="separator"></div>
@@ -104,6 +105,47 @@
             </div>
             <div class="status-item">
                 <span>💾 草稿自动保存</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公式工具弹窗（手动输入 + 公式助手） -->
+    <div class="modal-overlay" id="formulaModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <span class="modal-title">🧮 公式工具</span>
+                <div class="modal-tabs">
+                    <button class="modal-tab active" data-tab="input" type="button">✏️ 手动输入</button>
+                    <button class="modal-tab" data-tab="assistant" type="button">📚 公式助手</button>
+                </div>
+                <button class="modal-close" id="formulaModalClose" type="button" title="关闭">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Tab 1: 手动输入 -->
+                <div class="tab-panel active" id="tab-input">
+                    <div class="formula-mode-row">
+                        <label class="mode-option">
+                            <input type="radio" name="formulaMode" value="inline" checked>
+                            <span>行内公式 <code>$...$</code></span>
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="formulaMode" value="block">
+                            <span>行间公式 <code>$$...$$</code></span>
+                        </label>
+                    </div>
+                    <div class="symbol-palette" id="symbolPalette"></div>
+                    <textarea id="formulaInput" rows="4" placeholder="在此输入 LaTeX 公式代码，例如：\frac{x}{y} 或 E=mc^2，可点击上方符号快速插入"></textarea>
+                    <div class="modal-actions">
+                        <button class="btn-insert" id="btnInsertFormula" type="button">✔ 插入公式</button>
+                    </div>
+                </div>
+                <!-- Tab 2: 公式助手 -->
+                <div class="tab-panel" id="tab-assistant">
+                    <div class="assistant-layout">
+                        <div class="assistant-cats" id="assistantCats"></div>
+                        <div class="assistant-list" id="assistantList"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

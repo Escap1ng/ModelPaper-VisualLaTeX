@@ -18,6 +18,12 @@
 
 ---
 
+<div align="center">
+
+![VisualLaTeX 编辑器界面](screenshots/editor.png)
+
+</div>
+
 ## 为什么需要它
 
 论文截稿前夜，导师只让你"改几句话、换个标题"——可一打开 `.tex`，满屏反斜杠和花括号扑面而来。Overleaf 很强，但它为写代码的人设计；你只想安全地小改一下。

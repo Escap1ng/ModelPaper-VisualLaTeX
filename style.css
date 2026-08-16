@@ -1,43 +1,3 @@
-/* 本地字体配置（使用开源字体：思源宋体、思源黑体） */
-/* 字体文件需要用户自行下载并放到 fonts/ 目录下 */
-/* 下载地址：https://github.com/googlefonts/noto-cjk/releases */
-
-@font-face {
-    font-family: 'Noto Serif SC';
-    src: url('fonts/NotoSerifSC-Regular.woff2') format('woff2'),
-         url('fonts/NotoSerifSC-Regular.otf') format('opentype');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Noto Serif SC';
-    src: url('fonts/NotoSerifSC-Bold.woff2') format('woff2'),
-         url('fonts/NotoSerifSC-Bold.otf') format('opentype');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Noto Sans SC';
-    src: url('fonts/NotoSansSC-Regular.woff2') format('woff2'),
-         url('fonts/NotoSansSC-Regular.otf') format('opentype');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Noto Sans SC';
-    src: url('fonts/NotoSansSC-Bold.woff2') format('woff2'),
-         url('fonts/NotoSansSC-Bold.otf') format('opentype');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
 /* 全局样式重置 */
 * {
     margin: 0;
@@ -178,23 +138,23 @@ body {
     background: #fafbfc;
 }
 
-/* 编辑器内容样式（标题按数模规范字号：三号/四号/小四） */
+/* 编辑器内容样式 */
 .editor-area h1 {
-    font-size: 21px; /* 三号 ≈ 16pt */
+    font-size: 21px;
     font-weight: bold;
     margin: 20px 0 15px 0;
     color: #2c3e50;
 }
 
 .editor-area h2 {
-    font-size: 19px; /* 四号 ≈ 14pt */
+    font-size: 19px;
     font-weight: bold;
     margin: 18px 0 12px 0;
     color: #34495e;
 }
 
 .editor-area h3 {
-    font-size: 16px; /* 小四 = 12pt */
+    font-size: 16px;
     font-weight: bold;
     margin: 15px 0 10px 0;
     color: #34495e;
@@ -231,6 +191,30 @@ body {
     font-family: 'Courier New', monospace;
     color: #0c5460;
     border-left: 4px solid #17a2b8;
+}
+
+/* 原样保留块：表格/文献/代码清单等未可视化支持的 LaTeX 结构 */
+.editor-area .raw-tex {
+    background: #f1f3f5;
+    padding: 10px 12px;
+    border-radius: 5px;
+    margin: 15px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #495057;
+    border-left: 4px solid #adb5bd;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 行内 LaTeX 命令（\cite、\ref 等，只读原样保留） */
+.editor-area .tex-cmd {
+    background: #e9ecef;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #495057;
 }
 
 .editor-area img {
@@ -325,35 +309,6 @@ body {
     }
 }
 
-/* 字体定义 */
-.font-songti {
-    font-family: 'Noto Serif SC', '思源宋体', serif;
-}
-
-.font-heiti {
-    font-family: 'Noto Sans SC', '思源黑体', sans-serif;
-}
-
-/* 工具栏下拉框样式 */
-.toolbar select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    background: white;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.toolbar select:hover {
-    border-color: #667eea;
-}
-
-.toolbar select:focus {
-    outline: none;
-    border-color: #667eea;
-}
-
 /* 加载动画 */
 .loading {
     display: inline-block;
@@ -369,7 +324,7 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* ===== 公式工具弹窗 ===== */
+/* ===== 公式输入弹窗 ===== */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -409,33 +364,7 @@ body {
     font-size: 16px;
     font-weight: 600;
     white-space: nowrap;
-}
-
-.modal-tabs {
-    display: flex;
-    gap: 6px;
     flex: 1;
-}
-
-.modal-tab {
-    padding: 6px 14px;
-    border: none;
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.modal-tab:hover {
-    background: rgba(255, 255, 255, 0.28);
-}
-
-.modal-tab.active {
-    background: white;
-    color: #667eea;
-    font-weight: 600;
 }
 
 .modal-close {
@@ -469,7 +398,7 @@ body {
     display: block;
 }
 
-/* 手动输入 Tab */
+/* 公式输入面板 */
 .formula-mode-row {
     display: flex;
     gap: 16px;
@@ -557,111 +486,4 @@ body {
 
 .btn-insert:hover {
     background: #5568d3;
-}
-
-/* 公式助手 Tab */
-.assistant-layout {
-    display: flex;
-    gap: 14px;
-    min-height: 360px;
-}
-
-.assistant-cats {
-    width: 150px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.cat-item {
-    padding: 9px 12px;
-    border: none;
-    background: #f1f3f5;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    text-align: left;
-    transition: all 0.15s;
-}
-
-.cat-item:hover {
-    background: #e2e8f0;
-}
-
-.cat-item.active {
-    background: #667eea;
-    color: white;
-    font-weight: 600;
-}
-
-.assistant-list {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.assistant-hint {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 10px;
-}
-
-.formula-item {
-    padding: 8px 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: all 0.15s;
-    background: white;
-}
-
-.formula-item:hover {
-    border-color: #667eea;
-    background: #f5f6ff;
-    transform: translateX(2px);
-}
-
-.formula-item-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 4px;
-}
-
-.formula-item-name .badge {
-    font-size: 11px;
-    font-weight: 400;
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: #eef2ff;
-    color: #667eea;
-    margin-left: 6px;
-}
-
-.formula-item-latex {
-    display: block;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    color: #0c5460;
-    background: #f8f9fa;
-    padding: 4px 8px;
-    border-radius: 4px;
-    word-break: break-all;
-    white-space: pre-wrap;
-}
-
-/* 响应式：小屏幕时公式助手改为上下布局 */
-@media (max-width: 768px) {
-    .assistant-layout {
-        flex-direction: column;
-        min-height: auto;
-    }
-
-    .assistant-cats {
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
 }

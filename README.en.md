@@ -18,6 +18,12 @@
 
 ---
 
+<div align="center">
+
+![VisualLaTeX editor screenshot](screenshots/editor.png)
+
+</div>
+
 ## Why This Exists
 
 It's the night before the deadline, and your advisor only asked you to "change a few sentences and reword a title" — yet the moment you open the `.tex` file, a wall of backslashes and braces stares back at you. Overleaf is great, but it is designed for people who write code. You just want a small, safe change.

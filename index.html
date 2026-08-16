@@ -10,7 +10,7 @@
     <div class="container">
         <!-- 顶部标题栏 -->
         <div class="header">
-            <h1>✏️ VisualLaTeX - 离线 LaTeX 轻编辑器</h1>
+            <h1>VisualLaTeX · 离线 LaTeX 轻编辑器</h1>
             <p>导入 .tex 文件，可视化轻量修改，右侧实时生成 LaTeX 代码，全程离线运行</p>
         </div>
 
@@ -24,29 +24,29 @@
 
             <button id="btnBold" title="加粗 (Ctrl+B)"><b>B</b></button>
             <button id="btnItalic" title="斜体 (Ctrl+I)"><i>I</i></button>
-            <button id="btnCenter" title="居中">⊙</button>
+            <button id="btnCenter" title="居中">居中</button>
 
             <div class="separator"></div>
 
-            <button id="btnUl" title="无序列表">• 列表</button>
-            <button id="btnOl" title="有序列表">1. 列表</button>
+            <button id="btnUl" title="无序列表">无序列表</button>
+            <button id="btnOl" title="有序列表">有序列表</button>
 
             <div class="separator"></div>
 
             <button id="btnInlineFormula" title="行内公式">$ 公式 $</button>
             <button id="btnBlockFormula" title="行间公式">$$ 公式 $$</button>
-            <button id="btnImage" title="插入图片">🖼 图片</button>
+            <button id="btnImage" title="插入图片">图片</button>
 
             <div class="separator"></div>
 
-            <button id="btnImport" class="primary" title="导入本地 .tex 文件进行轻量编辑">📥 导入 .tex</button>
-            <button id="btnStart" class="primary" title="清空编辑器开始新文档">🆕 开始</button>
-            <button id="btnReload" title="删除草稿并重新加载">🔄 重新加载</button>
+            <button id="btnImport" class="primary" title="导入本地 .tex 文件进行轻量编辑">导入 .tex</button>
+            <button id="btnStart" class="primary" title="清空编辑器开始新文档">新建</button>
+            <button id="btnReload" title="删除草稿并重新加载">重载</button>
 
             <div class="separator"></div>
 
-            <button id="btnCopy" class="success" title="复制 LaTeX 代码">📋 复制代码</button>
-            <button id="btnDownload" class="success" title="下载 .tex 文件">💾 下载文件</button>
+            <button id="btnCopy" class="success" title="复制 LaTeX 代码">复制代码</button>
+            <button id="btnDownload" class="success" title="下载 .tex 文件">下载文件</button>
         </div>
 
         <!-- 隐藏的文件选择框（导入 .tex 用） -->
@@ -56,16 +56,16 @@
         <div class="main-content">
             <!-- 左侧编辑区 -->
             <div class="editor-panel">
-                <div class="panel-header">📝 可视化编辑区</div>
+                <div class="panel-header">可视化编辑区</div>
                 <div id="editorArea" class="editor-area" contenteditable="true">
                     <h1>欢迎使用 VisualLaTeX</h1>
                     <p>这是一个纯前端、零依赖、完全离线的 LaTeX 轻编辑器，适合对已有论文做快速小修改。</p>
 
                     <h2>三步上手</h2>
                     <ol>
-                        <li>点击工具栏的「📥 导入 .tex」，选择本地的 LaTeX 文件</li>
+                        <li>点击工具栏的「导入 .tex」，选择本地的 LaTeX 文件</li>
                         <li>在左侧像使用 Word 一样修改文字、标题、列表与公式</li>
-                        <li>点击「💾 下载文件」导出修改后的 .tex，或复制代码到剪贴板</li>
+                        <li>点击「下载文件」导出修改后的 .tex，或复制代码到剪贴板</li>
                     </ol>
 
                     <h2>公式示例</h2>
@@ -80,7 +80,7 @@
 
             <!-- 右侧预览区 -->
             <div class="preview-panel">
-                <div class="panel-header">📄 LaTeX 代码预览</div>
+                <div class="panel-header">LaTeX 代码预览</div>
                 <div id="previewArea" class="preview-area"></div>
             </div>
         </div>
@@ -92,7 +92,7 @@
                 <span id="statusText">就绪</span>
             </div>
             <div class="status-item">
-                <span>💾 草稿自动保存</span>
+                <span>草稿自动保存</span>
             </div>
         </div>
     </div>
@@ -101,7 +101,7 @@
     <div class="modal-overlay" id="formulaModal">
         <div class="modal-dialog">
             <div class="modal-header">
-                <span class="modal-title">🧮 公式工具</span>
+                <span class="modal-title">公式工具</span>
                 <button class="modal-close" id="formulaModalClose" type="button" title="关闭">×</button>
             </div>
             <div class="modal-body">
@@ -119,7 +119,7 @@
                     <div class="symbol-palette" id="symbolPalette"></div>
                     <textarea id="formulaInput" rows="4" placeholder="在此输入 LaTeX 公式代码，例如：\frac{x}{y} 或 E=mc^2，可点击上方符号快速插入"></textarea>
                     <div class="modal-actions">
-                        <button class="btn-insert" id="btnInsertFormula" type="button">✔ 插入公式</button>
+                        <button class="btn-insert" id="btnInsertFormula" type="button">插入公式</button>
                     </div>
                 </div>
             </div>

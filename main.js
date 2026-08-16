@@ -1,6 +1,7 @@
 /**
- * ModelPaper-WYSIWYG-LaTeX 主逻辑
- * 编辑器核心 + DOM 转 LaTeX 转换
+ * VisualLaTeX 主逻辑
+ * 编辑器核心 + .tex 导入 + DOM 转 LaTeX 转换
+ * 定位：导入 .tex 文件 -> 可视化轻量修改 -> 导出，全程离线
  */
 
 // 全局变量
@@ -8,8 +9,10 @@ let editorArea = null;
 let previewArea = null;
 let statusText = null;
 let debounceTimer = null;
-let templatePreamble = null; // 保存模板的 preamble（可选）
-let savedSelection = null; // 保存编辑器选区（用于字体切换等场景）
+let texPreamble = null;      // 导入文件的导言区（原样保留，导出时复用）
+let texTail = '';            // \end{document} 之后的尾部内容（原样保留）
+let importedFileName = null; // 导入的文件名（用于导出命名）
+let savedSelection = null;   // 保存编辑器选区（用于公式弹窗等场景）
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,17 +23,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // 绑定工具栏按钮事件
     initToolbar();
 
-    // 初始化公式工具弹窗
+    // 初始化公式输入弹窗
     initFormulaModal();
 
-    // 从 localStorage 恢复草稿
+    // 从 localStorage 恢复草稿（含导言区/尾部/文件名）
     loadDraft();
 
-    // 监听编辑器变化，实时更新 LaTeX
+    // 监听编辑器变化，实时更新 LaTeX 并保存草稿
     editorArea.addEventListener('input', function() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(function() {
-            checkDoubleSpaceIndent();
             updatePreview();
             saveDraft();
         }, 300);
@@ -38,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 初始更新预览
     updatePreview();
-    
-    // 保存编辑器选区（用于字体切换等场景）
+
+    // 保存编辑器选区
     editorArea.addEventListener('mouseup', saveEditorSelection);
     editorArea.addEventListener('keyup', saveEditorSelection);
 });
@@ -50,22 +52,6 @@ function saveEditorSelection() {
     if (sel.rangeCount > 0 && editorArea.contains(sel.anchorNode)) {
         savedSelection = sel.getRangeAt(0).cloneRange();
     }
-}
-
-// 检测双空格并转换为首行缩进
-function checkDoubleSpaceIndent() {
-    const paragraphs = editorArea.querySelectorAll('p, div');
-    paragraphs.forEach(p => {
-        const text = p.textContent;
-        // 检测段落开头是否有两个空格
-        if (text.startsWith('  ')) {
-            // 移除开头的空格
-            const cleanText = text.replace(/^  +/, '');
-            p.textContent = cleanText;
-            // 添加首行缩进样式
-            p.style.textIndent = '2em';
-        }
-    });
 }
 
 // 初始化工具栏
@@ -79,7 +65,6 @@ function initToolbar() {
     document.getElementById('btnBold').addEventListener('click', toggleBold);
     document.getElementById('btnItalic').addEventListener('click', toggleItalic);
     document.getElementById('btnCenter').addEventListener('click', toggleCenter);
-    document.getElementById('fontSelect').addEventListener('change', changeFont);
 
     // 列表按钮
     document.getElementById('btnUl').addEventListener('click', insertUnorderedList);
@@ -88,13 +73,32 @@ function initToolbar() {
     // 公式按钮
     document.getElementById('btnInlineFormula').addEventListener('click', insertInlineFormula);
     document.getElementById('btnBlockFormula').addEventListener('click', insertBlockFormula);
-    document.getElementById('btnFormulaAssistant').addEventListener('click', openFormulaAssistant);
 
     // 图片按钮
     document.getElementById('btnImage').addEventListener('click', insertImage);
 
-    // 模板按钮
-    document.getElementById('btnTemplate').addEventListener('click', loadTemplate);
+    // 导入 .tex 文件
+    document.getElementById('btnImport').addEventListener('click', function() {
+        const input = document.getElementById('texFileInput');
+        input.value = '';
+        input.click();
+    });
+    document.getElementById('texFileInput').addEventListener('change', function() {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        if (!confirm('导入将覆盖当前编辑内容，是否继续？')) {
+            this.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            applyImportedTex(e.target.result, file.name);
+        };
+        reader.onerror = function() {
+            alert('读取文件失败，请重试');
+        };
+        reader.readAsText(file, 'UTF-8');
+    });
 
     // 开始和重新加载按钮
     document.getElementById('btnStart').addEventListener('click', startNewDocument);
@@ -108,7 +112,6 @@ function initToolbar() {
 // 插入标题
 function insertHeading(level) {
     const tag = 'h' + level;
-    const text = level === 1 ? '一级标题' : level === 2 ? '二级标题' : '三级标题';
     document.execCommand('formatBlock', false, tag);
     editorArea.focus();
 }
@@ -127,72 +130,12 @@ function toggleItalic() {
 
 // 切换居中
 function toggleCenter() {
-    // 检查当前是否已居中
     const isCentered = document.queryCommandState('justifyCenter');
-    
     if (isCentered) {
-        // 已居中，切换回左对齐
         document.execCommand('justifyLeft', false, null);
     } else {
-        // 未居中，设置为居中
         document.execCommand('justifyCenter', false, null);
     }
-    editorArea.focus();
-}
-
-// 改变字体
-function changeFont() {
-    const fontSelect = document.getElementById('fontSelect');
-    const selectedFont = fontSelect.value;
-    
-    if (!selectedFont) {
-        updateStatus('请选择字体');
-        return;
-    }
-    
-    // 恢复保存的选区
-    if (savedSelection) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedSelection);
-    }
-    
-    // 检查是否有选中文本
-    const sel = window.getSelection();
-    const selectedText = sel.toString();
-    
-    if (selectedText && sel.rangeCount > 0) {
-        // 有选中文本，用 span 包裹并设置字体
-        const range = sel.getRangeAt(0);
-        const span = document.createElement('span');
-        span.style.fontFamily = selectedFont;
-        span.setAttribute('data-font', selectedFont);
-        
-        try {
-            range.surroundContents(span);
-        } catch (e) {
-            // 如果选区跨越多个节点，使用替代方法
-            const fragment = range.extractContents();
-            span.appendChild(fragment);
-            range.insertNode(span);
-        }
-        
-        // 重新设置选区
-        sel.removeAllRanges();
-        const newRange = document.createRange();
-        newRange.selectNodeContents(span);
-        sel.addRange(newRange);
-    } else {
-        // 无选中文本，在光标处插入带字体标记的 span
-        const span = document.createElement('span');
-        span.style.fontFamily = selectedFont;
-        span.setAttribute('data-font', selectedFont);
-        span.textContent = '在此输入';
-        insertNodeAtCursor(span);
-    }
-    
-    updatePreview();
-    saveDraft();
     editorArea.focus();
 }
 
@@ -208,19 +151,14 @@ function insertOrderedList() {
     editorArea.focus();
 }
 
-// 插入行内公式（打开公式工具弹窗）
+// 插入行内公式（打开公式弹窗）
 function insertInlineFormula() {
-    openFormulaModal('inline', 'input');
+    openFormulaModal('inline');
 }
 
-// 插入行间公式（打开公式工具弹窗）
+// 插入行间公式（打开公式弹窗）
 function insertBlockFormula() {
-    openFormulaModal('block', 'input');
-}
-
-// 打开公式助手
-function openFormulaAssistant() {
-    openFormulaModal('inline', 'assistant');
+    openFormulaModal('block');
 }
 
 // 插入图片
@@ -251,13 +189,11 @@ function insertNodeAtCursor(node) {
         range.deleteContents();
         range.insertNode(node);
 
-        // 在节点后添加一个空格，方便继续输入
         const space = document.createTextNode(' ');
         range.setStartAfter(node);
         range.setEndAfter(node);
         range.insertNode(space);
 
-        // 移动光标到空格后
         range.setStartAfter(space);
         range.collapse(true);
         sel.removeAllRanges();
@@ -265,34 +201,35 @@ function insertNodeAtCursor(node) {
     }
 }
 
-// 加载数模模板
-function loadTemplate() {
-    if (!confirm('加载模板会覆盖当前内容，是否继续？')) return;
+// ========== .tex 导入 ==========
 
-    // 优先尝试 fetch（HTTP 模式下可读取外部 .tex 文件）
-    fetch('templates/mcm_template.tex')
-        .then(response => {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.text();
-        })
-        .then(texContent => applyTemplate(texContent))
-        .catch(() => {
-            // fetch 失败（file:// 协议），使用内嵌模板
-            const embedded = document.getElementById('mcm-template');
-            if (embedded && embedded.textContent.trim()) {
-                applyTemplate(embedded.textContent.trim());
-            } else {
-                alert('加载模板失败：无法获取模板内容');
-            }
-        });
+// 应用导入的 .tex 内容
+function applyImportedTex(tex, fileName) {
+    const docMatch = tex.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}([\s\S]*)$/);
+    if (!docMatch) {
+        alert('导入失败：未找到 \\begin{document}...\\end{document} 结构');
+        return;
+    }
+
+    const preambleMatch = tex.match(/^([\s\S]*?)\\begin\{document\}/);
+    texPreamble = preambleMatch ? preambleMatch[1].trim() : '';
+    texTail = docMatch[2].trim();
+    importedFileName = fileName || null;
+
+    editorArea.innerHTML = parseTexToHtml(docMatch[1]);
+    updatePreview();
+    saveDraft();
+    updateStatus('已导入 ' + (fileName || '.tex 文件'));
 }
 
 // 开始新文档（清空编辑器）
 function startNewDocument() {
     if (!confirm('确定要清空编辑器开始新文档吗？当前内容将丢失。')) return;
-    
+
     editorArea.innerHTML = '<h1>新文档</h1><p>在此输入内容...</p>';
-    templatePreamble = null; // 清除模板 preamble
+    texPreamble = null;
+    texTail = '';
+    importedFileName = null;
     updatePreview();
     saveDraft();
     updateStatus('已开始新文档');
@@ -301,57 +238,68 @@ function startNewDocument() {
 // 重新加载并删除草稿
 function reloadAndClearDraft() {
     if (!confirm('确定要删除草稿并重新加载吗？所有未保存的内容将丢失。')) return;
-    
-    // 清除 localStorage 中的草稿
+
     try {
+        localStorage.removeItem('visuellatex_draft');
+        localStorage.removeItem('visuellatex_draft_time');
+        localStorage.removeItem('visuellatex_preamble');
+        localStorage.removeItem('visuellatex_tail');
+        localStorage.removeItem('visuellatex_filename');
+        // 清理旧版本遗留的草稿 key
         localStorage.removeItem('modelpaper_draft');
         localStorage.removeItem('modelpaper_draft_time');
     } catch (e) {
         console.error('清除草稿失败：', e);
     }
-    
-    // 重新加载页面
+
     location.reload();
 }
 
-// 应用模板到编辑器
-function applyTemplate(texContent) {
-    // 提取并保存模板的 preamble
-    const preambleMatch = texContent.match(/^([\s\S]*?)\\begin\{document\}/);
-    if (preambleMatch) {
-        templatePreamble = preambleMatch[1].trim();
-    }
-    
-    const htmlContent = parseTemplateToHTML(texContent);
-    editorArea.innerHTML = htmlContent;
-    updatePreview();
-    saveDraft();
-    updateStatus('模板加载成功');
+// ========== LaTeX -> HTML 解析（导入用，往返保真） ==========
+
+// HTML 文本转义
+function escapeForHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
-// 解析 LaTeX 模板为 HTML
-function parseTemplateToHTML(tex) {
+// HTML 属性值转义
+function escapeAttr(text) {
+    return escapeForHtml(text).replace(/"/g, '&quot;');
+}
+
+// 解析 LaTeX 正文为 HTML
+function parseTexToHtml(tex) {
     let html = '';
 
-    // 辅助：清理 LaTeX 文本为 HTML
+    // 辅助：清理 LaTeX 文本为 HTML（保留行内公式与行内命令）
     function cleanLatexText(text) {
-        // 先提取行内公式 $...$，避免被其他替换影响
+        // 1) 先提取行内公式，避免被其他替换影响
         const formulas = [];
-        text = text.replace(/\$([^$]+)\$/g, (match, formula) => {
+        text = text.replace(/\$([^$]+)\$/g, function(match, formula) {
             const f = formula.trim();
             formulas.push(f);
             return '\x00F' + (formulas.length - 1) + '\x00';
         });
-        // 处理文本格式命令
+        // 2) 转义普通文本中的 HTML 特殊字符（公式已提取，不受影响）
+        text = escapeForHtml(text);
+        // 3) 处理文本格式命令
         text = text
             .replace(/\\textbf\{([^}]*)\}/g, '<b>$1</b>')
             .replace(/\\textit\{([^}]*)\}/g, '<i>$1</i>')
             .replace(/\\emph\{([^}]*)\}/g, '<i>$1</i>')
             .replace(/\\\\/g, '<br>');
-        // 还原行内公式为 span
-        text = text.replace(/\x00F(\d+)\x00/g, (match, idx) => {
-            const f = formulas[parseInt(idx)];
-            return '<span class="formula-inline" data-formula="' + f + '">$' + f + '$</span>';
+        // 4) 其余行内命令（\cite、\ref、\eqref、\footnote 等）原样保留为只读 span
+        //    （文本已转义，此处无需再次转义，避免 &amp; 变成 &amp;amp;）
+        text = text.replace(/\\[a-zA-Z]+(?:\s*\[[^\]\n]*\])?(?:\s*\{[^{}\n]*\})*/g, function(cmd) {
+            return '<span class="tex-cmd" contenteditable="false">' + cmd + '</span>';
+        });
+        // 5) 还原行内公式为只读 span
+        text = text.replace(/\x00F(\d+)\x00/g, function(match, idx) {
+            const f = formulas[parseInt(idx, 10)];
+            return '<span class="formula-inline" data-formula="' + escapeAttr(f) + '" contenteditable="false">$' + escapeForHtml(f) + '$</span>';
         });
         return text.trim();
     }
@@ -359,70 +307,55 @@ function parseTemplateToHTML(tex) {
     // 去除注释（不处理 \% 转义）
     tex = tex.replace(/(^|[^\\])%.*/g, '$1');
 
-    // 提取标题
-    const titleMatch = tex.match(/\\title\{([^}]+)\}/);
-    if (titleMatch) {
-        html += '<h1>' + cleanLatexText(titleMatch[1]) + '</h1>\n';
-    }
+    let body = tex;
 
-    // 提取文档主体
-    const bodyMatch = tex.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
-    if (!bodyMatch) return html;
-    let body = bodyMatch[1];
-
-    // 移除不需要解析的命令
-    body = body.replace(/\\maketitle|\\thispagestyle\{[^}]*\}|\\tableofcontents|\\newpage|\\appendix/g, '');
-
-    // 处理 abstract 环境
-    body = body.replace(/\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}/g, (match, content) =>
-        '\n<h2>摘要</h2>\n<p>' + cleanLatexText(content) + '</p>\n'
-    );
-
-    // 处理 equation 环境
-    body = body.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, (match, content) => {
+    // equation 环境 -> 公式块
+    body = body.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, function(match, content) {
         const formula = content.trim();
-        return '\n<div class="formula-block" data-formula="' + formula + '">$$' + formula + '$$</div>\n';
+        return '\n<div class="formula-block" data-formula="' + escapeAttr(formula) + '" contenteditable="false">$$' + escapeForHtml(formula) + '$$</div>\n';
     });
 
-    // 处理 figure 环境
-    body = body.replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, match => {
+    // figure 环境 -> 图片节点
+    body = body.replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, function(match) {
         const imgMatch = match.match(/\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/);
         const capMatch = match.match(/\\caption\{([^}]+)\}/);
         const labelMatch = match.match(/\\label\{([^}]+)\}/);
         const path = imgMatch ? imgMatch[1] : '';
         const caption = capMatch ? capMatch[1] : '';
         const label = labelMatch ? labelMatch[1] : '';
-        return '\n<img src="' + path + '" alt="' + caption + '" data-caption="' + caption + '" data-label="' + label + '" data-width="0.6">\n';
+        return '\n<img src="' + escapeAttr(path) + '" alt="' + escapeAttr(caption) + '" data-caption="' + escapeAttr(caption) + '" data-label="' + escapeAttr(label) + '" data-width="0.6">\n';
     });
 
-    // 处理 table 环境（简化为占位符）
-    body = body.replace(/\\begin\{table\}[\s\S]*?\\end\{table\}/g, '\n<p>[表格：请手动编辑]</p>\n');
-
-    // 处理 itemize 环境
-    body = body.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (match, content) => {
-        const items = content.match(/\\item\s+([\s\S]*?)(?=\\item|$)/g);
+    // itemize 环境
+    body = body.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, function(match, content) {
+        const items = content.match(/\\item\s+[\s\S]*?(?=\\item|$)/g);
         if (!items) return '';
-        const listHtml = items.map(item =>
-            '    <li>' + cleanLatexText(item.replace(/\\item\s+/, '')) + '</li>'
-        ).join('\n');
+        const listHtml = items.map(function(item) {
+            return '    <li>' + cleanLatexText(item.replace(/\\item\s+/, '')) + '</li>';
+        }).join('\n');
         return '\n<ul>\n' + listHtml + '\n</ul>\n';
     });
 
-    // 处理 enumerate 环境
-    body = body.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (match, content) => {
-        const items = content.match(/\\item\s+([\s\S]*?)(?=\\item|$)/g);
+    // enumerate 环境
+    body = body.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, function(match, content) {
+        const items = content.match(/\\item\s+[\s\S]*?(?=\\item|$)/g);
         if (!items) return '';
-        const listHtml = items.map(item =>
-            '    <li>' + cleanLatexText(item.replace(/\\item\s+/, '')) + '</li>'
-        ).join('\n');
+        const listHtml = items.map(function(item) {
+            return '    <li>' + cleanLatexText(item.replace(/\\item\s+/, '')) + '</li>';
+        }).join('\n');
         return '\n<ol>\n' + listHtml + '\n</ol>\n';
     });
 
-    // 移除参考文献和代码清单（暂不解析）
-    body = body.replace(/\\begin\{thebibliography\}[\s\S]*?\\end\{thebibliography\}/g, '');
-    body = body.replace(/\\begin\{lstlisting\}[\s\S]*?\\end\{lstlisting\}/g, '');
+    // 其余一切块级环境（table、abstract、thebibliography、lstlisting、algorithm、未知环境）
+    // -> 原样保留块，用户可直接编辑文本，导出时原样输出
+    // 先以占位符暂存，避免多行内容在逐行处理阶段被拆散、二次转义
+    const rawBlocks = [];
+    body = body.replace(/\\begin\{([A-Za-z]+\*?)\}[\s\S]*?\\end\{\1\}/g, function(match) {
+        rawBlocks.push('<div class="raw-tex">' + escapeForHtml(match) + '</div>');
+        return '\n\x00R' + (rawBlocks.length - 1) + '\x00\n';
+    });
 
-    // 逐行处理章节和普通文本
+    // 逐行处理章节、独立命令与普通文本
     const lines = body.split('\n');
     let pendingText = '';
 
@@ -442,15 +375,17 @@ function parseTemplateToHTML(tex) {
             continue;
         }
 
+        // 原样保留块占位符 -> 输出完整块
+        if (/^\x00R\d+\x00$/.test(trimmed)) {
+            flushText();
+            html += rawBlocks[parseInt(trimmed.replace(/\x00R|\x00/g, ''), 10)] + '\n';
+            continue;
+        }
+
         // 已处理的 HTML 标签直接输出
         if (/^</.test(trimmed)) {
             flushText();
             html += trimmed + '\n';
-            continue;
-        }
-
-        // 跳过未处理的 LaTeX 命令行
-        if (/^\\(maketitle|thispagestyle|tableofcontents|newpage|appendix|bibitem)/.test(trimmed)) {
             continue;
         }
 
@@ -464,9 +399,10 @@ function parseTemplateToHTML(tex) {
         } else if ((m = trimmed.match(/^\\subsubsection\{([^}]+)\}/))) {
             flushText();
             html += '<h3>' + cleanLatexText(m[1]) + '</h3>\n';
-        } else if (/^\\/.test(trimmed)) {
-            // 其他 LaTeX 命令行，跳过
-            continue;
+        } else if (/^\\[a-zA-Z]+/.test(trimmed)) {
+            // 其余独立命令行（\maketitle、\newpage、\tableofcontents 等）原样保留
+            flushText();
+            html += '<div class="raw-tex">' + escapeForHtml(trimmed) + '</div>\n';
         } else {
             pendingText += (pendingText ? ' ' : '') + trimmed;
         }
@@ -476,30 +412,24 @@ function parseTemplateToHTML(tex) {
     return html;
 }
 
-// DOM 转 LaTeX
+// ========== DOM 转 LaTeX（导出用） ==========
+
 function domToLatex() {
     let latex = '';
 
-    // 如果有模板 preamble，使用它；否则使用默认配置
-    if (templatePreamble) {
-        latex += templatePreamble + '\n\n';
+    // 有导入文件的导言区则原样使用，否则使用默认配置
+    if (texPreamble) {
+        latex += texPreamble + '\n\n';
     } else {
-        // 添加文档类
         latex += '\\documentclass[12pt,a4paper]{article}\n\n';
-
-        // 添加常用宏包
         latex += '% 中文支持\n';
-        latex += '\\usepackage{ctex}\n';
-        latex += '\\usepackage{fontspec}\n\n';
-
+        latex += '\\usepackage{ctex}\n\n';
         latex += '% 数学公式\n';
         latex += '\\usepackage{amsmath}\n';
         latex += '\\usepackage{amssymb}\n\n';
-
         latex += '% 图表\n';
         latex += '\\usepackage{graphicx}\n';
         latex += '\\usepackage{float}\n\n';
-
         latex += '% 页面布局\n';
         latex += '\\usepackage{geometry}\n';
         latex += '\\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}\n\n';
@@ -507,13 +437,15 @@ function domToLatex() {
 
     latex += '\\begin{document}\n\n';
 
-    // 遍历编辑器内容（使用 childNodes 以包含文本节点）
     const nodes = editorArea.childNodes;
     for (let i = 0; i < nodes.length; i++) {
         latex += convertNodeToLatex(nodes[i]);
     }
 
     latex += '\n\\end{document}\n';
+    if (texTail) {
+        latex += texTail + '\n';
+    }
 
     return latex;
 }
@@ -534,6 +466,15 @@ function convertNodeToLatex(node) {
         return '';
     }
 
+    // 原样保留块：直接输出其文本内容
+    if (node.classList.contains('raw-tex')) {
+        const raw = node.textContent.replace(/\s+$/, '');
+        if (raw) {
+            return raw + '\n\n';
+        }
+        return '';
+    }
+
     const tagName = node.tagName.toLowerCase();
 
     switch (tagName) {
@@ -551,18 +492,12 @@ function convertNodeToLatex(node) {
 
         case 'p':
         case 'div':
-            // 检查是否是公式块
             if (node.classList.contains('formula-block')) {
                 const formula = node.getAttribute('data-formula');
                 latex += '\\begin{equation}\n';
                 latex += '    ' + formula + '\n';
                 latex += '\\end{equation}\n\n';
             } else {
-                // 检查是否有首行缩进样式
-                const hasIndent = node.style.textIndent === '2em';
-                if (hasIndent) {
-                    latex += '\\indent ';
-                }
                 latex += convertInlineNodes(node) + '\n\n';
             }
             break;
@@ -570,7 +505,7 @@ function convertNodeToLatex(node) {
         case 'ul': {
             latex += '\\begin{itemize}\n';
             const ulItems = node.querySelectorAll(':scope > li');
-            ulItems.forEach(item => {
+            ulItems.forEach(function(item) {
                 latex += '    \\item ' + getNodeTextContent(item) + '\n';
             });
             latex += '\\end{itemize}\n\n';
@@ -580,14 +515,14 @@ function convertNodeToLatex(node) {
         case 'ol': {
             latex += '\\begin{enumerate}\n';
             const olItems = node.querySelectorAll(':scope > li');
-            olItems.forEach(item => {
+            olItems.forEach(function(item) {
                 latex += '    \\item ' + getNodeTextContent(item) + '\n';
             });
             latex += '\\end{enumerate}\n\n';
             break;
         }
 
-        case 'img':
+        case 'img': {
             const imgPath = node.getAttribute('src') || '';
             const imgCaption = node.getAttribute('data-caption') || '图片';
             const imgLabel = node.getAttribute('data-label') || 'fig:image';
@@ -600,13 +535,13 @@ function convertNodeToLatex(node) {
             latex += '    \\label{' + imgLabel + '}\n';
             latex += '\\end{figure}\n\n';
             break;
+        }
 
         case 'br':
-            latex += '\\\\\n';
+            latex += '\\\\n';
             break;
 
         default:
-            // 递归处理子节点
             for (let i = 0; i < node.childNodes.length; i++) {
                 latex += convertNodeToLatex(node.childNodes[i]);
             }
@@ -615,7 +550,7 @@ function convertNodeToLatex(node) {
     return latex;
 }
 
-// 转换行内节点（处理粗体、斜体、行内公式等）
+// 转换行内节点（处理粗体、斜体、公式、原样命令等）
 function convertInlineNodes(node) {
     let latex = '';
 
@@ -627,27 +562,14 @@ function convertInlineNodes(node) {
         } else if (child.nodeType === Node.ELEMENT_NODE) {
             const tag = child.tagName.toLowerCase();
 
-            // 检查是否是行内公式
             if (child.classList.contains('formula-inline')) {
-                const formula = child.getAttribute('data-formula');
-                latex += '$' + formula + '$';
+                latex += '$' + child.getAttribute('data-formula') + '$';
+            } else if (child.classList.contains('tex-cmd')) {
+                latex += child.textContent;
             } else if (tag === 'b' || tag === 'strong') {
                 latex += '\\textbf{' + getNodeTextContent(child) + '}';
             } else if (tag === 'i' || tag === 'em') {
                 latex += '\\textit{' + getNodeTextContent(child) + '}';
-            } else if (tag === 'font' || (tag === 'span' && child.getAttribute('data-font'))) {
-                // 处理字体标记
-                const fontFace = child.getAttribute('face') || child.style.fontFamily || child.getAttribute('data-font');
-                const content = getNodeTextContent(child);
-                if (fontFace.includes('SimSun') || fontFace.includes('宋体') || fontFace.includes('Noto Serif SC') || fontFace.includes('思源宋体')) {
-                    latex += '{\\songti ' + content + '}';
-                } else if (fontFace.includes('SimHei') || fontFace.includes('黑体') || fontFace.includes('Noto Sans SC') || fontFace.includes('思源黑体')) {
-                    latex += '{\\heiti ' + content + '}';
-                } else {
-                    latex += content;
-                }
-            } else if (tag === 'span' || tag === 'u') {
-                latex += getNodeTextContent(child);
             } else {
                 latex += getNodeTextContent(child);
             }
@@ -657,7 +579,7 @@ function convertInlineNodes(node) {
     return latex;
 }
 
-// 获取节点的纯文本内容
+// 获取节点的纯文本内容（行内公式还原为 $...$）
 function getNodeTextContent(node) {
     let text = '';
     for (let i = 0; i < node.childNodes.length; i++) {
@@ -704,22 +626,23 @@ function updatePreview() {
 // 复制 LaTeX 代码
 function copyLatex() {
     const latex = domToLatex();
-    navigator.clipboard.writeText(latex).then(() => {
+    navigator.clipboard.writeText(latex).then(function() {
         updateStatus('已复制到剪贴板');
         alert('LaTeX 代码已复制到剪贴板！');
-    }).catch(err => {
+    }).catch(function(err) {
         alert('复制失败：' + err);
     });
 }
 
-// 下载 .tex 文件
+// 下载 .tex 文件（优先沿用导入时的文件名）
 function downloadTexFile() {
     const latex = domToLatex();
+    const baseName = importedFileName ? importedFileName.replace(/\.[^.]+$/, '') : 'document';
     const blob = new Blob([latex], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'paper.tex';
+    a.download = baseName + '.tex';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -727,12 +650,14 @@ function downloadTexFile() {
     updateStatus('文件已下载');
 }
 
-// 保存草稿到 localStorage
+// 保存草稿到 localStorage（含导言区/尾部/文件名）
 function saveDraft() {
     try {
-        const content = editorArea.innerHTML;
-        localStorage.setItem('modelpaper_draft', content);
-        localStorage.setItem('modelpaper_draft_time', new Date().toISOString());
+        localStorage.setItem('visuellatex_draft', editorArea.innerHTML);
+        localStorage.setItem('visuellatex_preamble', texPreamble || '');
+        localStorage.setItem('visuellatex_tail', texTail || '');
+        localStorage.setItem('visuellatex_filename', importedFileName || '');
+        localStorage.setItem('visuellatex_draft_time', new Date().toISOString());
     } catch (e) {
         console.error('保存草稿失败：', e);
     }
@@ -741,14 +666,16 @@ function saveDraft() {
 // 从 localStorage 加载草稿
 function loadDraft() {
     try {
-        const content = localStorage.getItem('modelpaper_draft');
-        const time = localStorage.getItem('modelpaper_draft_time');
+        const content = localStorage.getItem('visuellatex_draft');
+        const time = localStorage.getItem('visuellatex_draft_time');
 
         if (content) {
             editorArea.innerHTML = content;
+            texPreamble = localStorage.getItem('visuellatex_preamble') || null;
+            texTail = localStorage.getItem('visuellatex_tail') || '';
+            importedFileName = localStorage.getItem('visuellatex_filename') || null;
             if (time) {
-                const date = new Date(time);
-                updateStatus('已恢复草稿（' + date.toLocaleString('zh-CN') + '）');
+                updateStatus('已恢复草稿（' + new Date(time).toLocaleString('zh-CN') + '）');
             }
         }
     } catch (e) {
@@ -763,7 +690,7 @@ function updateStatus(message) {
     }
 }
 
-// ========== 公式工具弹窗（手动输入 + 公式助手） ==========
+// ========== 公式输入弹窗 ==========
 
 // 常用 LaTeX 符号面板
 const SYMBOL_PALETTE = [
@@ -803,178 +730,24 @@ const SYMBOL_PALETTE = [
     { label: 'Σ', latex: '\\Sigma' }
 ];
 
-// 常用数模公式库（type: inline=行内公式, block=行间公式）
-const FORMULA_LIBRARY = [
-    {
-        name: '基础数学',
-        icon: '∑',
-        formulas: [
-            { name: '分数', latex: '\\frac{a}{b}', type: 'inline' },
-            { name: '根式', latex: '\\sqrt{a}', type: 'inline' },
-            { name: 'n 次根式', latex: '\\sqrt[n]{a}', type: 'inline' },
-            { name: '求和', latex: '\\sum_{i=1}^{n} x_i', type: 'inline' },
-            { name: '求积', latex: '\\prod_{i=1}^{n} x_i', type: 'inline' },
-            { name: '积分', latex: '\\int_{a}^{b} f(x) \\, dx', type: 'inline' },
-            { name: '极限', latex: '\\lim_{x \\to 0} \\frac{f(x)}{x}', type: 'inline' },
-            { name: '导数', latex: "f'(x) = \\lim_{\\Delta x \\to 0} \\frac{f(x + \\Delta x) - f(x)}{\\Delta x}", type: 'block' },
-            { name: '矩阵', latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', type: 'block' },
-            { name: '行列式', latex: '\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}', type: 'block' },
-            { name: '分段函数', latex: 'f(x) = \\begin{cases} x^2, & x \\geq 0 \\\\ -x, & x < 0 \\end{cases}', type: 'block' },
-            { name: '方程组', latex: '\\begin{cases} x + y = 1 \\\\ x - y = 2 \\end{cases}', type: 'block' },
-            { name: '牛顿-莱布尼茨公式', latex: '\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)', type: 'block' },
-            { name: '泰勒展开', latex: 'f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!} (x-a)^n', type: 'block' }
-        ]
-    },
-    {
-        name: '概率统计',
-        icon: 'σ',
-        formulas: [
-            { name: '样本均值', latex: '\\bar{x} = \\frac{1}{n} \\sum_{i=1}^{n} x_i', type: 'inline' },
-            { name: '样本方差', latex: 's^2 = \\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2', type: 'block' },
-            { name: '样本标准差', latex: 's = \\sqrt{\\frac{1}{n-1} \\sum_{i=1}^{n} (x_i - \\bar{x})^2}', type: 'block' },
-            { name: '期望', latex: 'E(X) = \\sum_{i=1}^{n} x_i p_i', type: 'inline' },
-            { name: '方差', latex: 'D(X) = E[(X - E(X))^2]', type: 'inline' },
-            { name: '协方差', latex: 'Cov(X, Y) = E[(X - E(X))(Y - E(Y))]', type: 'inline' },
-            { name: '相关系数', latex: '\\rho_{XY} = \\frac{Cov(X, Y)}{\\sqrt{D(X)} \\sqrt{D(Y)}}', type: 'block' },
-            { name: '条件概率', latex: 'P(A|B) = \\frac{P(AB)}{P(B)}', type: 'inline' },
-            { name: '贝叶斯公式', latex: 'P(A_i|B) = \\frac{P(B|A_i) P(A_i)}{\\sum_{j} P(B|A_j) P(A_j)}', type: 'block' },
-            { name: '正态分布密度', latex: 'f(x) = \\frac{1}{\\sqrt{2\\pi} \\sigma} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}', type: 'block' },
-            { name: '均匀分布', latex: 'f(x) = \\frac{1}{b-a}, \\quad a \\leq x \\leq b', type: 'inline' },
-            { name: '二项分布', latex: 'P(X=k) = C_n^k p^k (1-p)^{n-k}', type: 'inline' },
-            { name: '泊松分布', latex: 'P(X=k) = \\frac{\\lambda^k e^{-\\lambda}}{k!}', type: 'inline' },
-            { name: '指数分布', latex: 'f(x) = \\lambda e^{-\\lambda x}, \\quad x \\geq 0', type: 'inline' },
-            { name: '中心极限定理', latex: '\\frac{\\bar{X} - \\mu}{\\sigma/\\sqrt{n}} \\sim N(0, 1)', type: 'block' }
-        ]
-    },
-    {
-        name: '评价模型',
-        icon: '★',
-        formulas: [
-            { name: 'Min-Max 归一化（正向）', latex: "x'_{ij} = \\frac{x_{ij} - \\min_j x_{ij}}{\\max_j x_{ij} - \\min_j x_{ij}}", type: 'block' },
-            { name: 'Min-Max 归一化（逆向）', latex: "x'_{ij} = \\frac{\\max_j x_{ij} - x_{ij}}{\\max_j x_{ij} - \\min_j x_{ij}}", type: 'block' },
-            { name: 'Z-score 标准化', latex: "x'_{ij} = \\frac{x_{ij} - \\bar{x}_j}{s_j}", type: 'inline' },
-            { name: '熵权法-比重', latex: 'p_{ij} = \\frac{x_{ij}}{\\sum_{i=1}^{n} x_{ij}}', type: 'block' },
-            { name: '熵权法-熵值', latex: 'H_j = -\\frac{1}{\\ln n} \\sum_{i=1}^{n} p_{ij} \\ln p_{ij}', type: 'block' },
-            { name: '熵权法-权重', latex: 'w_j = \\frac{1 - H_j}{m - \\sum_{j=1}^{m} H_j}', type: 'block' },
-            { name: 'AHP 一致性指标', latex: 'CI = \\frac{\\lambda_{\\max} - n}{n - 1}', type: 'block' },
-            { name: 'AHP 一致性比率', latex: 'CR = \\frac{CI}{RI} < 0.1', type: 'block' },
-            { name: 'TOPSIS 正理想解距离', latex: 'd_i^{+} = \\sqrt{\\sum_{j=1}^{m} (v_{ij} - v_j^{+})^2}', type: 'block' },
-            { name: 'TOPSIS 负理想解距离', latex: 'd_i^{-} = \\sqrt{\\sum_{j=1}^{m} (v_{ij} - v_j^{-})^2}', type: 'block' },
-            { name: 'TOPSIS 贴近度', latex: 'C_i = \\frac{d_i^{-}}{d_i^{+} + d_i^{-}}', type: 'block' },
-            { name: '加权综合评价', latex: 'S_i = \\sum_{j=1}^{m} w_j r_{ij}', type: 'inline' },
-            { name: '灰色关联系数', latex: '\\xi_i(k) = \\frac{\\min_i \\min_k |x_0(k)-x_i(k)| + \\rho \\max_i \\max_k |x_0(k)-x_i(k)|}{|x_0(k)-x_i(k)| + \\rho \\max_i \\max_k |x_0(k)-x_i(k)|}', type: 'block' },
-            { name: '灰色关联度', latex: 'r_i = \\frac{1}{n} \\sum_{k=1}^{n} \\xi_i(k)', type: 'block' },
-            { name: '模糊综合评价', latex: 'B = A \\circ R', type: 'inline' }
-        ]
-    },
-    {
-        name: '预测模型',
-        icon: '📈',
-        formulas: [
-            { name: '一元线性回归', latex: 'y = \\beta_0 + \\beta_1 x + \\varepsilon', type: 'inline' },
-            { name: '回归系数估计', latex: '\\hat{\\beta}_1 = \\frac{\\sum_{i=1}^{n} (x_i - \\bar{x})(y_i - \\bar{y})}{\\sum_{i=1}^{n} (x_i - \\bar{x})^2}', type: 'block' },
-            { name: '多元线性回归', latex: 'y = \\beta_0 + \\beta_1 x_1 + \\cdots + \\beta_p x_p + \\varepsilon', type: 'inline' },
-            { name: '逻辑回归', latex: 'P = \\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 x)}}', type: 'block' },
-            { name: 'GM(1,1) 累加生成', latex: "x^{(1)}(k) = \\sum_{i=1}^{k} x^{(0)}(i)", type: 'block' },
-            { name: 'GM(1,1) 时间响应式', latex: "\\hat{x}^{(1)}(k+1) = \\left( x^{(0)}(1) - \\frac{b}{a} \\right) e^{-ak} + \\frac{b}{a}", type: 'block' },
-            { name: 'GM(1,1) 预测还原', latex: "\\hat{x}^{(0)}(k+1) = \\hat{x}^{(1)}(k+1) - \\hat{x}^{(1)}(k)", type: 'block' },
-            { name: '一次指数平滑', latex: 'S_t = \\alpha x_t + (1 - \\alpha) S_{t-1}', type: 'inline' },
-            { name: '移动平均', latex: '\\bar{x}_t = \\frac{1}{n} \\sum_{i=1}^{n} x_{t-i}', type: 'inline' },
-            { name: '指数增长模型', latex: 'N(t) = N_0 e^{rt}', type: 'inline' },
-            { name: 'Malthus 模型', latex: '\\frac{dN}{dt} = rN', type: 'block' },
-            { name: '均方根误差 RMSE', latex: 'RMSE = \\sqrt{\\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2}', type: 'block' },
-            { name: '平均绝对百分比误差 MAPE', latex: 'MAPE = \\frac{1}{n} \\sum_{i=1}^{n} \\left| \\frac{y_i - \\hat{y}_i}{y_i} \\right| \\times 100\\%', type: 'block' },
-            { name: '拟合优度 R²', latex: 'R^2 = 1 - \\frac{\\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2}{\\sum_{i=1}^{n} (y_i - \\bar{y})^2}', type: 'block' }
-        ]
-    },
-    {
-        name: '优化模型',
-        icon: '⚙',
-        formulas: [
-            { name: '线性规划（标准形）', latex: '\\min z = \\sum_{j=1}^{n} c_j x_j, \\quad s.t. \\ \\sum_{j=1}^{n} a_{ij} x_j \\leq b_i, \\ x_j \\geq 0', type: 'block' },
-            { name: '0-1 整数变量', latex: 'x_j \\in \\{0, 1\\}', type: 'inline' },
-            { name: '运输问题目标', latex: '\\min z = \\sum_{i=1}^{m} \\sum_{j=1}^{n} c_{ij} x_{ij}', type: 'block' },
-            { name: '产销平衡约束', latex: '\\sum_{j=1}^{n} x_{ij} = a_i, \\quad \\sum_{i=1}^{m} x_{ij} = b_j', type: 'block' },
-            { name: '多目标规划', latex: '\\min F(x) = (f_1(x), f_2(x), \\cdots, f_k(x))^T', type: 'block' },
-            { name: '加权法转化', latex: '\\min \\sum_{i=1}^{k} w_i f_i(x)', type: 'inline' },
-            { name: '动态规划递推', latex: 'f_k(s_k) = \\min_{x_k} \\{ v_k(s_k, x_k) + f_{k+1}(s_{k+1}) \\}', type: 'block' },
-            { name: 'M/M/1 队长', latex: 'L_s = \\frac{\\lambda}{\\mu - \\lambda}', type: 'inline' },
-            { name: 'M/M/1 等待时间', latex: 'W_s = \\frac{1}{\\mu - \\lambda}', type: 'inline' },
-            { name: 'M/M/1 空闲率', latex: 'P_0 = 1 - \\frac{\\lambda}{\\mu}', type: 'inline' }
-        ]
-    },
-    {
-        name: '微分方程',
-        icon: 'dx',
-        formulas: [
-            { name: '一阶常微分方程', latex: '\\frac{dy}{dx} = f(x, y)', type: 'inline' },
-            { name: '可分离变量', latex: '\\int \\frac{dy}{h(y)} = \\int g(x) \\, dx + C', type: 'block' },
-            { name: 'Logistic 增长模型', latex: '\\frac{dN}{dt} = rN \\left( 1 - \\frac{N}{K} \\right)', type: 'block' },
-            { name: 'Logistic 模型解', latex: 'N(t) = \\frac{K}{1 + \\left( \\frac{K}{N_0} - 1 \\right) e^{-rt}}', type: 'block' },
-            { name: '指数衰减', latex: '\\frac{dN}{dt} = -\\lambda N', type: 'inline' },
-            { name: '二阶常系数齐次方程', latex: "y'' + py' + qy = 0", type: 'inline' },
-            { name: 'SIR 模型', latex: '\\begin{cases} \\frac{dS}{dt} = -\\beta SI \\\\ \\frac{dI}{dt} = \\beta SI - \\gamma I \\\\ \\frac{dR}{dt} = \\gamma I \\end{cases}', type: 'block' },
-            { name: 'SI 模型', latex: '\\frac{dI}{dt} = \\beta SI, \\quad S + I = N', type: 'block' },
-            { name: '欧拉法', latex: 'y_{k+1} = y_k + h f(x_k, y_k)', type: 'inline' },
-            { name: '四阶龙格-库塔法', latex: 'y_{k+1} = y_k + \\frac{h}{6} (k_1 + 2k_2 + 2k_3 + k_4)', type: 'block' }
-        ]
-    },
-    {
-        name: '插值拟合',
-        icon: '~',
-        formulas: [
-            { name: '拉格朗日基函数', latex: 'l_i(x) = \\prod_{j \\neq i} \\frac{x - x_j}{x_i - x_j}', type: 'block' },
-            { name: '拉格朗日插值多项式', latex: 'L_n(x) = \\sum_{i=0}^{n} y_i l_i(x)', type: 'block' },
-            { name: '最小二乘拟合', latex: '\\min \\sum_{i=1}^{n} (y_i - f(x_i))^2', type: 'block' },
-            { name: '梯形求积公式', latex: '\\int_{a}^{b} f(x) \\, dx \\approx \\frac{b-a}{2} (f(a) + f(b))', type: 'block' },
-            { name: '辛普森求积公式', latex: '\\int_{a}^{b} f(x) \\, dx \\approx \\frac{b-a}{6} \\left[ f(a) + 4f\\left(\\frac{a+b}{2}\\right) + f(b) \\right]', type: 'block' }
-        ]
-    }
-];
-
-// HTML 转义（用于公式库展示）
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// 打开公式工具弹窗
-function openFormulaModal(mode, tab) {
+// 打开公式弹窗
+function openFormulaModal(mode) {
     const modal = document.getElementById('formulaModal');
 
     // 保存编辑器选区（弹窗聚焦会劫持 DOM 选区）
     saveEditorSelection();
 
-    // 设置插入模式
     const radio = document.querySelector('input[name="formulaMode"][value="' + (mode || 'inline') + '"]');
     if (radio) radio.checked = true;
 
-    switchModalTab(tab || 'input');
     modal.classList.add('show');
-
-    if (tab !== 'assistant') {
-        document.getElementById('formulaInput').focus();
-    }
+    document.getElementById('formulaInput').focus();
 }
 
-// 关闭公式工具弹窗
+// 关闭公式弹窗
 function closeFormulaModal() {
     document.getElementById('formulaModal').classList.remove('show');
     if (editorArea) editorArea.focus();
-}
-
-// 切换弹窗标签页
-function switchModalTab(tab) {
-    document.querySelectorAll('.modal-tab').forEach(function(t) {
-        t.classList.toggle('active', t.dataset.tab === tab);
-    });
-    document.querySelectorAll('.tab-panel').forEach(function(p) {
-        p.classList.toggle('active', p.id === 'tab-' + tab);
-    });
-    if (tab === 'assistant') {
-        renderFormulaAssistant();
-    }
 }
 
 // 渲染符号面板
@@ -1016,21 +789,23 @@ function insertFormulaFromInput() {
     closeFormulaModal();
 }
 
-// 在编辑器光标处插入公式节点
+// 在编辑器光标处插入公式节点（只读，防止误改导致数据不同步）
 function insertFormulaNode(latex, type) {
-    // 恢复编辑器中的选区（弹窗会劫持 DOM 选区，需先恢复再插入）
+    // 恢复编辑器中的选区
     restoreEditorSelection();
 
     if (type === 'block') {
         const div = document.createElement('div');
         div.className = 'formula-block';
         div.setAttribute('data-formula', latex);
+        div.setAttribute('contenteditable', 'false');
         div.textContent = '$$' + latex + '$$';
         insertNodeAtCursor(div);
     } else {
         const span = document.createElement('span');
         span.className = 'formula-inline';
         span.setAttribute('data-formula', latex);
+        span.setAttribute('contenteditable', 'false');
         span.textContent = '$' + latex + '$';
         insertNodeAtCursor(span);
     }
@@ -1053,7 +828,7 @@ function restoreEditorSelection() {
     if (!range) {
         range = document.createRange();
         range.selectNodeContents(editorArea);
-        range.collapse(false); // 折叠到末尾
+        range.collapse(false);
     }
 
     sel.removeAllRanges();
@@ -1061,82 +836,9 @@ function restoreEditorSelection() {
     editorArea.focus();
 }
 
-// 渲染公式助手
-let currentFormulaCategory = null;
-
-function renderFormulaAssistant() {
-    const catsEl = document.getElementById('assistantCats');
-    const listEl = document.getElementById('assistantList');
-
-    catsEl.innerHTML = '';
-    FORMULA_LIBRARY.forEach(function(cat, idx) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'cat-item' + (idx === 0 ? ' active' : '');
-        btn.textContent = cat.icon + ' ' + cat.name;
-        btn.addEventListener('click', function() {
-            currentFormulaCategory = cat;
-            catsEl.querySelectorAll('.cat-item').forEach(function(c) {
-                c.classList.remove('active');
-            });
-            btn.classList.add('active');
-            renderFormulaList(cat);
-        });
-        catsEl.appendChild(btn);
-    });
-
-    currentFormulaCategory = FORMULA_LIBRARY[0];
-    renderFormulaList(currentFormulaCategory);
-}
-
-// 渲染分类下的公式列表
-function renderFormulaList(cat) {
-    const listEl = document.getElementById('assistantList');
-    listEl.innerHTML = '';
-
-    const hint = document.createElement('div');
-    hint.className = 'assistant-hint';
-    hint.textContent = '共 ' + cat.formulas.length + ' 个公式，点击即可插入到编辑器光标处';
-    listEl.appendChild(hint);
-
-    cat.formulas.forEach(function(f) {
-        const item = document.createElement('div');
-        item.className = 'formula-item';
-        item.title = '点击插入' + (f.type === 'block' ? '行间' : '行内') + '公式';
-
-        const nameRow = document.createElement('div');
-        nameRow.className = 'formula-item-name';
-        nameRow.textContent = f.name;
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = f.type === 'block' ? '行间' : '行内';
-        nameRow.appendChild(badge);
-
-        const latexCode = document.createElement('code');
-        latexCode.className = 'formula-item-latex';
-        latexCode.textContent = f.latex;
-
-        item.appendChild(nameRow);
-        item.appendChild(latexCode);
-
-        item.addEventListener('click', function() {
-            insertFormulaNode(f.latex, f.type || 'inline');
-            closeFormulaModal();
-        });
-        listEl.appendChild(item);
-    });
-}
-
-// 初始化公式工具弹窗
+// 初始化公式弹窗
 function initFormulaModal() {
     renderSymbolPalette();
-
-    // 标签切换
-    document.querySelectorAll('.modal-tab').forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            switchModalTab(tab.dataset.tab);
-        });
-    });
 
     // 关闭按钮
     document.getElementById('formulaModalClose').addEventListener('click', closeFormulaModal);
@@ -1149,7 +851,7 @@ function initFormulaModal() {
     // 插入按钮
     document.getElementById('btnInsertFormula').addEventListener('click', insertFormulaFromInput);
 
-    // 文本框回车插入（Ctrl+Enter）
+    // 文本框 Ctrl+Enter 插入
     document.getElementById('formulaInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();

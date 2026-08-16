@@ -2,13 +2,11 @@
 
 [中文](README.md) | **English**
 
-![Version](https://img.shields.io/github/v/release/Escap1ng/VisualLaTeX?color=green&label=Version)
-![License](https://img.shields.io/github/license/Escap1ng/VisualLaTeX?color=blue)
-![HTML](https://img.shields.io/badge/HTML-native-orange)
-![CSS](https://img.shields.io/badge/CSS-native-blue)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
-![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
-![Platform](https://img.shields.io/badge/platform-web%20%7C%20offline-lightgrey)
+![Version](https://img.shields.io/badge/Version-v2.0.0-green)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Tech](https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JS-orange)
+![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)
+![Platform](https://img.shields.io/badge/Platform-offline-lightgrey)
 
 > **📌 Project Status**
 > v2.0.0 is the final feature release. The project is now in maintenance mode (critical fixes only, no new features).

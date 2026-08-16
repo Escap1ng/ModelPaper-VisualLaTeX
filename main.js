@@ -341,7 +341,7 @@ function parseTexToHtml(tex) {
         const items = content.match(/\\item\s+[\s\S]*?(?=\\item|$)/g);
         if (!items) return '';
         const listHtml = items.map(function(item) {
-            return '    <li>' + cleanLatexText(item.replace(/\\item\s+/, '')) + '</li>';
+            return '    <li>' + cleanLatexText(item.replace(/\\item\s+/, '')) + '</li>'
         }).join('\n');
         return '\n<ol>\n' + listHtml + '\n</ol>\n';
     });
@@ -538,7 +538,7 @@ function convertNodeToLatex(node) {
         }
 
         case 'br':
-            latex += '\\\\n';
+            latex += '\\\\\n';
             break;
 
         default:

@@ -538,7 +538,8 @@ function convertNodeToLatex(node) {
         }
 
         case 'br':
-            latex += '\\' + '\n';
+            // LaTeX 换行符 \\ + 换行（92 为反斜杠字符码）
+            latex += String.fromCharCode(92, 92) + '\n';
             break;
 
         default:

@@ -2,13 +2,11 @@
 
 **中文** | [English](README.en.md)
 
-![Version](https://img.shields.io/github/v/release/Escap1ng/VisualLaTeX?color=green&label=Version)
-![License](https://img.shields.io/github/license/Escap1ng/VisualLaTeX?color=blue)
-![HTML](https://img.shields.io/badge/HTML-纯原生-orange)
-![CSS](https://img.shields.io/badge/CSS-纯原生-blue)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
-![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
-![Platform](https://img.shields.io/badge/platform-web%20%7C%20offline-lightgrey)
+![Version](https://img.shields.io/badge/Version-v2.0.0-green)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Tech](https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JS-orange)
+![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)
+![Platform](https://img.shields.io/badge/Platform-offline-lightgrey)
 
 > **📌 项目状态**
 > v2.0.0 为最终功能版本，项目转入维护状态（仅修复关键问题，不再新增功能）。

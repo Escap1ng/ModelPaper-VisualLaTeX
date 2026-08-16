@@ -1,3 +1,43 @@
+/* ============================================================
+   VisualLaTeX — 学术暖白主题
+   设计令牌驱动，纯原生 CSS，零依赖
+   ============================================================ */
+
+/* 设计令牌 */
+:root {
+    /* 底色 */
+    --bg: #f6f4ef;            /* 暖纸底色 */
+    --surface: #ffffff;       /* 面板 */
+    --surface-soft: #faf8f3;  /* 次级面板 */
+    --border: #e6e1d6;        /* 暖边框 */
+    --border-strong: #d6cfc0;
+
+    /* 文字 */
+    --text: #26231d;          /* 墨色正文 */
+    --text-secondary: #6f695c;
+
+    /* 强调色（氧化红） */
+    --accent: #9d4432;
+    --accent-hover: #83392a;
+    --accent-soft: #f5e9e4;
+
+    /* 成功（导出类按钮） */
+    --success: #3f7a54;
+    --success-hover: #346647;
+
+    /* 暖深色（预览区 / 状态栏 / 弹窗头） */
+    --ink-dark: #2b2822;
+
+    /* 形状与投影 */
+    --radius: 6px;
+    --radius-lg: 10px;
+    --shadow-sm: 0 1px 2px rgba(38, 35, 29, 0.06);
+    --shadow-modal: 0 20px 60px rgba(38, 35, 29, 0.25);
+
+    /* 动效 */
+    --transition: all 0.18s ease;
+}
+
 /* 全局样式重置 */
 * {
     margin: 0;
@@ -6,9 +46,9 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
     line-height: 1.6;
 }
 
@@ -21,83 +61,87 @@ body {
     overflow: hidden;
 }
 
-/* 顶部标题栏 */
+/* 顶部标题栏（纸白 + 下边线） */
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 15px 30px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--surface);
+    color: var(--text);
+    padding: 16px 30px;
+    border-bottom: 3px solid var(--accent);
 }
 
 .header h1 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
+    letter-spacing: 0.2px;
 }
 
 .header p {
     font-size: 14px;
-    opacity: 0.9;
-    margin-top: 5px;
+    color: var(--text-secondary);
+    margin-top: 4px;
 }
 
 /* 工具栏 */
 .toolbar {
-    background: white;
-    padding: 12px 20px;
-    border-bottom: 2px solid #e0e0e0;
+    background: var(--surface);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     align-items: center;
 }
 
 .toolbar button {
-    padding: 8px 16px;
-    border: 1px solid #ddd;
-    background: white;
-    border-radius: 4px;
+    padding: 7px 14px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: var(--radius);
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.2s;
+    transition: var(--transition);
     font-weight: 500;
 }
 
 .toolbar button:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-    transform: translateY(-1px);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .toolbar button:active {
     transform: translateY(0);
+    background: #eedcd4;
 }
 
 .toolbar button.primary {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
 }
 
 .toolbar button.primary:hover {
-    background: #5568d3;
+    background: var(--accent-hover);
+    color: #fff;
 }
 
 .toolbar button.success {
-    background: #48bb78;
-    color: white;
-    border-color: #48bb78;
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
 }
 
 .toolbar button.success:hover {
-    background: #38a169;
+    background: var(--success-hover);
+    color: #fff;
 }
 
 .toolbar .separator {
     width: 1px;
-    height: 30px;
-    background: #ddd;
-    margin: 0 8px;
+    height: 26px;
+    background: var(--border);
+    margin: 0 6px;
 }
 
 /* 主内容区域 - 双栏布局 */
@@ -112,22 +156,24 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: white;
-    border-right: 2px solid #e0e0e0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
 }
 
 .panel-header {
-    background: #f8f9fa;
-    padding: 12px 20px;
-    border-bottom: 1px solid #e0e0e0;
+    background: var(--surface-soft);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
     font-weight: 600;
-    font-size: 16px;
-    color: #495057;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
 }
 
 .editor-area {
     flex: 1;
-    padding: 30px;
+    padding: 30px 36px;
     overflow-y: auto;
     outline: none;
     font-size: 16px;
@@ -135,29 +181,29 @@ body {
 }
 
 .editor-area:focus {
-    background: #fafbfc;
+    background: #fdfcfa;
 }
 
 /* 编辑器内容样式 */
 .editor-area h1 {
     font-size: 21px;
-    font-weight: bold;
+    font-weight: 700;
     margin: 20px 0 15px 0;
-    color: #2c3e50;
+    color: var(--text);
 }
 
 .editor-area h2 {
     font-size: 19px;
-    font-weight: bold;
+    font-weight: 600;
     margin: 18px 0 12px 0;
-    color: #34495e;
+    color: var(--text);
 }
 
 .editor-area h3 {
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
     margin: 15px 0 10px 0;
-    color: #34495e;
+    color: var(--text);
 }
 
 .editor-area p {
@@ -174,55 +220,57 @@ body {
     margin: 5px 0;
 }
 
+/* 行内公式（暖黄纸底） */
 .editor-area .formula-inline {
-    background: #fff3cd;
+    background: #faf3dd;
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: 4px;
     font-family: 'Courier New', monospace;
-    color: #856404;
+    color: #7a5c1e;
 }
 
+/* 行间公式（暖纸底 + 强调色左边线） */
 .editor-area .formula-block {
-    background: #d1ecf1;
-    padding: 10px;
-    border-radius: 5px;
+    background: var(--surface-soft);
+    padding: 12px;
+    border-radius: var(--radius);
     margin: 15px 0;
     text-align: center;
     font-family: 'Courier New', monospace;
-    color: #0c5460;
-    border-left: 4px solid #17a2b8;
+    color: var(--text);
+    border-left: 4px solid var(--accent);
 }
 
 /* 原样保留块：表格/文献/代码清单等未可视化支持的 LaTeX 结构 */
 .editor-area .raw-tex {
-    background: #f1f3f5;
+    background: #efece5;
     padding: 10px 12px;
-    border-radius: 5px;
+    border-radius: var(--radius);
     margin: 15px 0;
     font-family: 'Courier New', monospace;
     font-size: 14px;
-    color: #495057;
-    border-left: 4px solid #adb5bd;
+    color: var(--text-secondary);
+    border-left: 4px solid var(--border-strong);
     white-space: pre-wrap;
     word-break: break-word;
 }
 
 /* 行内 LaTeX 命令（\cite、\ref 等，只读原样保留） */
 .editor-area .tex-cmd {
-    background: #e9ecef;
+    background: #ece7dd;
     padding: 1px 5px;
-    border-radius: 3px;
+    border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 14px;
-    color: #495057;
+    color: var(--text-secondary);
 }
 
 .editor-area img {
     max-width: 100%;
     height: auto;
     margin: 15px 0;
-    border: 2px solid #ddd;
-    border-radius: 5px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
 }
 
 /* 右侧预览区 */
@@ -230,7 +278,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: #f8f9fa;
+    background: var(--surface-soft);
 }
 
 .preview-area {
@@ -242,14 +290,14 @@ body {
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
-    background: #2d3748;
-    color: #e2e8f0;
+    background: var(--ink-dark);
+    color: #d8d3c8;
 }
 
 /* 状态栏 */
 .status-bar {
-    background: #2d3748;
-    color: #a0aec0;
+    background: var(--ink-dark);
+    color: #a39d8f;
     padding: 8px 20px;
     font-size: 13px;
     display: flex;
@@ -267,7 +315,15 @@ body {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #48bb78;
+    background: var(--success);
+}
+
+/* 键盘焦点环（可访问性） */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 /* 滚动条样式 */
@@ -276,16 +332,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--surface-soft);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--border-strong);
     border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: #b5ab98;
 }
 
 /* 响应式设计 */
@@ -296,16 +352,24 @@ body {
 
     .editor-panel {
         border-right: none;
-        border-bottom: 2px solid #e0e0e0;
+        border-bottom: 1px solid var(--border);
     }
 
     .toolbar {
-        padding: 10px;
+        padding: 8px 10px;
     }
 
     .toolbar button {
-        padding: 6px 12px;
+        padding: 6px 10px;
         font-size: 13px;
+    }
+}
+
+/* 动效克制：用户偏好减弱动画时关闭过渡 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
     }
 }
 
@@ -328,7 +392,7 @@ body {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(38, 35, 29, 0.45);
     display: none;
     align-items: center;
     justify-content: center;
@@ -343,9 +407,9 @@ body {
     width: 720px;
     max-width: 92vw;
     max-height: 85vh;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-modal);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -356,12 +420,12 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--ink-dark);
+    color: #fff;
 }
 
 .modal-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     white-space: nowrap;
     flex: 1;
@@ -372,16 +436,16 @@ body {
     height: 32px;
     border: none;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
     font-size: 18px;
     cursor: pointer;
     line-height: 1;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .modal-close:hover {
-    background: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .modal-body {
@@ -414,10 +478,11 @@ body {
 }
 
 .mode-option code {
-    background: #f1f3f5;
+    background: var(--surface-soft);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 13px;
+    border: 1px solid var(--border);
 }
 
 .symbol-palette {
@@ -425,9 +490,9 @@ body {
     flex-wrap: wrap;
     gap: 6px;
     padding: 10px;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     margin-bottom: 12px;
     max-height: 130px;
     overflow-y: auto;
@@ -435,36 +500,39 @@ body {
 
 .symbol-palette button {
     padding: 4px 10px;
-    border: 1px solid #ddd;
-    background: white;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
     border-radius: 5px;
     cursor: pointer;
     font-size: 13px;
     font-family: 'Courier New', monospace;
-    transition: all 0.15s;
+    color: var(--text);
+    transition: var(--transition);
 }
 
 .symbol-palette button:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
 }
 
 #formulaInput {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
     font-family: 'Courier New', monospace;
     font-size: 14px;
     resize: vertical;
     min-height: 90px;
     box-sizing: border-box;
+    color: var(--text);
+    background: var(--surface);
 }
 
 #formulaInput:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent);
 }
 
 .modal-actions {
@@ -475,15 +543,15 @@ body {
 
 .btn-insert {
     padding: 10px 28px;
-    background: #667eea;
-    color: white;
+    background: var(--accent);
+    color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius);
     font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .btn-insert:hover {
-    background: #5568d3;
+    background: var(--accent-hover);
 }

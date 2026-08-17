@@ -5,7 +5,7 @@
 **Import · Tweak · Export — an offline LaTeX light editor that never loses a character**
 
 [![Version](https://img.shields.io/badge/Version-v2.0.0-green)](https://github.com/Escap1ng/VisualLaTeX/releases)
-[![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
 ![Tech](https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JS-orange)
 ![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)
 ![Platform](https://img.shields.io/badge/Platform-Offline-lightgrey)
@@ -106,7 +106,7 @@ The project is in maintenance mode; Issue reports and Pull Requests for critical
 
 ## License
 
-[MIT License](./LICENSE) © Escap1ng
+[Apache License 2.0](./LICENSE) © Escap1ng
 
 ---
 

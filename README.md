@@ -5,7 +5,7 @@
 **导入 · 轻改 · 导出 —— 一个字符都不丢的离线 LaTeX 轻编辑器**
 
 [![Version](https://img.shields.io/badge/Version-v2.0.0-green)](https://github.com/Escap1ng/VisualLaTeX/releases)
-[![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
 ![Tech](https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JS-orange)
 ![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)
 ![Platform](https://img.shields.io/badge/Platform-Offline-lightgrey)
@@ -106,7 +106,7 @@ VisualLaTeX/
 
 ## 开源协议
 
-[MIT License](./LICENSE) © Escap1ng
+[Apache License 2.0](./LICENSE) © Escap1ng
 
 ---
 

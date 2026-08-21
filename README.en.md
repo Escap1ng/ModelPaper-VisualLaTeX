@@ -6,15 +6,13 @@
 
 [![Version](https://img.shields.io/badge/Version-v2.0.0-green)](https://github.com/Escap1ng/VisualLaTeX/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
-![Tech](https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JS-orange)
-![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)
-![Platform](https://img.shields.io/badge/Platform-Offline-lightgrey)
+[![CI](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/ci.yml/badge.svg)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/ci.yml)
+[![Online Demo](https://img.shields.io/badge/Online_Demo-GitHub_Pages-brightgreen)](https://Escap1ng.github.io/VisualLaTeX/)
+[![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/build.yml)
 
 [中文](README.md) · **English**
 
 </div>
-
-> **Project Status**: v2.0.0 is the final feature release. The project is now in maintenance mode (critical fixes only, no new features).
 
 ---
 
@@ -66,6 +64,8 @@ git clone https://github.com/Escap1ng/VisualLaTeX.git
 
 Then double-click `index.html`. That's it.
 
+You can also use the [online demo](https://Escap1ng.github.io/VisualLaTeX/) (auto-deployed by GitHub Actions).
+
 ## Project Structure
 
 ```
@@ -73,9 +73,21 @@ VisualLaTeX/
 ├── index.html    # Main page (layout, toolbar)
 ├── style.css     # Global styles
 ├── main.js       # Editor core, .tex parsing, DOM↔LaTeX conversion
+├── tests/        # Zero-dependency smoke checks (used by CI)
+├── .github/      # GitHub Actions workflows (CI / release / Pages)
 ├── README.md     # Docs (Chinese)
 └── README.en.md  # Docs (English)
 ```
+
+## Continuous Integration
+
+Automation is powered by GitHub Actions:
+
+| Workflow | Trigger | Purpose |
+|:---|:---|:---|
+| CI | push to `main` / PR to `main` | JS syntax check + zero-dependency smoke checks (assets, tag pairing, DOM id consistency) |
+| Build & Release | push `v*` version tag | Package `VisualLaTeX-vX.Y.Z.zip` and auto-upload to GitHub Release |
+| Deploy to GitHub Pages | push to `main` | Auto-deploy the [online demo](https://Escap1ng.github.io/VisualLaTeX/) |
 
 ## Recommended Workflow
 
@@ -94,7 +106,7 @@ Import the `.tex` you want to touch up → make visual text and structure adjust
 <details>
 <summary><b>Version History</b></summary>
 
-- **v2.0.0 (final)**: repositioned as a general offline LaTeX light editor; added .tex import; verbatim preservation of unsupported structures for lossless round-trips; fixed preamble not being cached with drafts and formulas losing user edits
+- **v2.0.0**: repositioned as a general offline LaTeX light editor; added .tex import; verbatim preservation of unsupported structures for lossless round-trips; fixed preamble not being cached with drafts and formulas losing user edits
 - **v1.1.0**: visual editor + formula assistant for math-modeling papers (removed in v2.0.0)
 - **v1.0.0**: initial release
 
@@ -102,7 +114,7 @@ Import the `.tex` you want to touch up → make visual text and structure adjust
 
 ## Contributing
 
-The project is in maintenance mode; Issue reports and Pull Requests for critical bug fixes are welcome via the [Issue tracker](https://github.com/Escap1ng/VisualLaTeX/issues).
+Issue reports and Pull Requests are welcome via the [Issue tracker](https://github.com/Escap1ng/VisualLaTeX/issues).
 
 ## License
 

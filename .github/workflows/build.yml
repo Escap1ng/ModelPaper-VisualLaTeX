@@ -1,0 +1,30 @@
+name: Build & Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 纯静态项目无运行时依赖，无需安装
+      - name: 打包项目为 zip
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $name = "VisualLaTeX-$tag"
+          New-Item -ItemType Directory -Path $name -Force | Out-Null
+          Copy-Item index.html, style.css, main.js, LICENSE, README.md, README.en.md -Destination $name
+          Copy-Item screenshots -Destination $name -Recurse
+          Compress-Archive -Path $name -DestinationPath "$name.zip"
+
+      - name: 发布到 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: VisualLaTeX-*.zip

@@ -6,15 +6,13 @@
 
 [![Version](https://img.shields.io/badge/Version-v2.0.0-green)](https://github.com/Escap1ng/VisualLaTeX/releases)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
-![Tech](https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JS-orange)
-![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)
-![Platform](https://img.shields.io/badge/Platform-Offline-lightgrey)
+[![CI](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/ci.yml/badge.svg)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/ci.yml)
+[![Online Demo](https://img.shields.io/badge/Online_Demo-GitHub_Pages-brightgreen)](https://Escap1ng.github.io/VisualLaTeX/)
+[![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/build.yml)
 
 **中文** · [English](README.en.md)
 
 </div>
-
-> **项目状态**：v2.0.0 为最终功能版本，已转入维护模式（仅修复关键问题，不再新增功能）。
 
 ---
 
@@ -66,6 +64,8 @@ git clone https://github.com/Escap1ng/VisualLaTeX.git
 
 然后双击 `index.html`。就这样。
 
+也可以直接使用[在线预览版](https://Escap1ng.github.io/VisualLaTeX/)（由 GitHub Actions 自动部署）。
+
 ## 项目结构
 
 ```
@@ -73,9 +73,21 @@ VisualLaTeX/
 ├── index.html    # 主页面（布局、工具栏）
 ├── style.css     # 全局样式
 ├── main.js       # 编辑器核心、.tex 解析、DOM↔LaTeX 转换
+├── tests/        # 零依赖冒烟检查（CI 使用）
+├── .github/      # GitHub Actions 工作流（CI / 自动发布 / Pages 部署）
 ├── README.md     # 项目说明（中文）
 └── README.en.md  # 项目说明（English）
 ```
+
+## 持续集成
+
+项目使用 GitHub Actions 实现自动化检查与发布：
+
+| 工作流 | 触发时机 | 作用 |
+|:---|:---|:---|
+| CI | 推送 `main` / 针对 `main` 的 PR | JS 语法检查 + 零依赖冒烟检查（资源完整、标签配对、DOM id 一致性） |
+| Build & Release | 推送 `v*` 版本标签 | 打包 `VisualLaTeX-vX.Y.Z.zip` 并自动上传至 GitHub Release |
+| Deploy to GitHub Pages | 推送 `main` | 自动部署[在线预览版](https://Escap1ng.github.io/VisualLaTeX/) |
 
 ## 推荐工作流
 
@@ -94,7 +106,7 @@ VisualLaTeX/
 <details>
 <summary><b>版本历史</b></summary>
 
-- **v2.0.0（最终版）**：去垂直化改造，转型为通用离线 LaTeX 轻编辑器；新增 .tex 导入；未支持结构原样保留，实现往返保真；修复导言区不随草稿缓存、公式误改丢数据等问题
+- **v2.0.0**：去垂直化改造，转型为通用离线 LaTeX 轻编辑器；新增 .tex 导入；未支持结构原样保留，实现往返保真；修复导言区不随草稿缓存、公式误改丢数据等问题
 - **v1.1.0**：可视化编辑器 + 数模公式助手（已被 v2.0.0 移除）
 - **v1.0.0**：首个版本
 
@@ -102,7 +114,7 @@ VisualLaTeX/
 
 ## 参与贡献
 
-项目已转入维护状态，关键 Bug 修复欢迎提交 [Issue](https://github.com/Escap1ng/VisualLaTeX/issues) 或 Pull Request。
+欢迎提交 [Issue](https://github.com/Escap1ng/VisualLaTeX/issues) 或 Pull Request。
 
 ## 开源协议
 

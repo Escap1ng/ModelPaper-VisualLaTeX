@@ -4,11 +4,11 @@
 
 **Import · Tweak · Export — an offline LaTeX light editor that never loses a character**
 
-[![Version](https://img.shields.io/badge/Version-v2.0.0-green)](https://github.com/Escap1ng/VisualLaTeX/releases)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
+[![Version](https://img.shields.io/badge/Version-v2.0.0-6f42c1)](https://github.com/Escap1ng/VisualLaTeX/releases)
+[![License](https://img.shields.io/badge/License-Apache_2.0-0366d6)](./LICENSE)
 [![CI](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/ci.yml/badge.svg)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/ci.yml)
-[![Online Demo](https://img.shields.io/badge/Online_Demo-GitHub_Pages-brightgreen)](https://Escap1ng.github.io/VisualLaTeX/)
-[![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/build.yml)
+[![Online Demo](https://img.shields.io/badge/Online_Demo-GitHub_Pages-00b4d8)](https://Escap1ng.github.io/VisualLaTeX/)
+[![Dependencies](https://img.shields.io/badge/Dependencies-none-959da5)](https://github.com/Escap1ng/VisualLaTeX/actions/workflows/build.yml)
 
 [中文](README.md) · **English**
 
